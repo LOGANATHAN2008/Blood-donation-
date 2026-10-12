@@ -4,7 +4,11 @@ let socket;
 
 export function getSocket(token) {
   if (!socket || !socket.connected) {
-    socket = io(import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:4000', {
+    const socketUrl = import.meta.env.VITE_API_URL
+      ? import.meta.env.VITE_API_URL.replace(/\/api\/?$/, '')
+      : (typeof window !== 'undefined' && window.location.origin ? window.location.origin : 'http://localhost:4000');
+
+    socket = io(socketUrl, {
       auth: { token },
       transports: ['websocket', 'polling'],
       reconnection: true,

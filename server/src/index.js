@@ -34,7 +34,9 @@ const server = http.createServer(app);
 const allowedOrigins = (process.env.CLIENT_URL || 'http://localhost:5173').split(',').map(s => s.trim());
 const corsOptions = {
   origin: (origin, cb) => {
-    if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
+    if (!origin || allowedOrigins.includes(origin) || process.env.VERCEL || (typeof origin === 'string' && origin.endsWith('.vercel.app'))) {
+      return cb(null, true);
+    }
     cb(new Error(`CORS: ${origin} not allowed`));
   },
   credentials: true,
@@ -114,15 +116,22 @@ async function start() {
     console.log('✅ Cron jobs started');
 
     const PORT = process.env.PORT || 4000;
-    server.listen(PORT, () => {
-      console.log(`🚀 Server running on http://localhost:${PORT}`);
-    });
+    if (!process.env.VERCEL && process.env.NODE_ENV !== 'test') {
+      server.listen(PORT, () => {
+        console.log(`🚀 Server running on http://localhost:${PORT}`);
+      });
+    }
   } catch (err) {
     console.error('Failed to start server:', err);
-    process.exit(1);
+    if (!process.env.VERCEL && process.env.NODE_ENV !== 'test') process.exit(1);
   }
 }
 
-start();
+if (process.env.NODE_ENV !== 'test') {
+  start();
+}
 
-module.exports = { app, server }; // for tests
+app.server = server;
+module.exports = app;
+module.exports.app = app;
+module.exports.server = server;
