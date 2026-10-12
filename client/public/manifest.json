@@ -1,0 +1,59 @@
+{
+  "name": "Blood.loganathanm.in - Life Connect",
+  "short_name": "Life Connect",
+  "description": "Emergency blood donation and vital medicine network across India",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#E11D48",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/brand/pwa-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/brand/pwa-maskable-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/brand/pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/brand/pwa-maskable-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Emergency Blood",
+      "short_name": "Emergency",
+      "description": "Quick emergency request",
+      "url": "/emergency",
+      "icons": [{ "src": "/brand/pwa-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Find Donors",
+      "short_name": "Donors",
+      "description": "Find compatible blood donors",
+      "url": "/donors",
+      "icons": [{ "src": "/brand/pwa-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Donor Card",
+      "short_name": "Card",
+      "description": "View digital donor credential card",
+      "url": "/donor-card",
+      "icons": [{ "src": "/brand/pwa-192x192.png", "sizes": "192x192" }]
+    }
+  ]
+}
