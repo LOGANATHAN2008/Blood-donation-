@@ -6,7 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import api from '../lib/api';
 import toast from 'react-hot-toast';
 
-const CLOUD = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
+const CLOUD = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || 'dxsa93rr2';
 
 function cloudinaryUrl(publicId, w = 400) {
   if (!publicId) return null;

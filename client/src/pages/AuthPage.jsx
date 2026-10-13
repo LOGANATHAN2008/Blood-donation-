@@ -50,12 +50,13 @@ export default function AuthPage() {
     // Handle redirect result
     const handleRedirect = async () => {
       try {
+        if (!auth || typeof getRedirectResult !== 'function') return;
         const result = await getRedirectResult(auth);
         if (result) {
           toast.success('Google login successful');
         }
       } catch (err) {
-        if (err.code === 'auth/account-exists-with-different-credential') {
+        if (err?.code === 'auth/account-exists-with-different-credential') {
           setError('An account already exists with the same email address but different sign-in credentials. Sign in using a provider associated with this email address.');
         } else {
           setError('Google Sign-In failed during redirect.');

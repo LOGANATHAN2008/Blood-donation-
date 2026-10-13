@@ -13,44 +13,56 @@ export function AuthProvider({ children }) {
   const [isProfilePopupOpen, setIsProfilePopupOpen] = useState(false);
 
   const logout = async () => {
-    await auth.signOut();
+    if (auth?.signOut) {
+      await auth.signOut();
+    }
   };
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
-        setUser(firebaseUser);
-        try {
-          const token = await firebaseUser.getIdToken();
-          setIdToken(token);
-          // Fetch DB user (creates on first login)
-          const { data } = await api.get('/me');
-          setDbUser(data);
-          
-          // Auto-open profile popup ONLY for new incomplete users
-          const isStoredComplete = localStorage.getItem(`profile_completed_${firebaseUser.uid}`) === 'true';
-          const isComplete = Boolean(
-            data?.profileCompleted || 
-            data?.onboardingComplete || 
-            data?.profileStatus?.isComplete || 
-            isStoredComplete
-          );
+    let unsub = () => {};
+    try {
+      if (auth && typeof onAuthStateChanged === 'function') {
+        unsub = onAuthStateChanged(auth, async (firebaseUser) => {
+          if (firebaseUser) {
+            setUser(firebaseUser);
+            try {
+              const token = await firebaseUser.getIdToken();
+              setIdToken(token);
+              // Fetch DB user (creates on first login)
+              const { data } = await api.get('/me');
+              setDbUser(data);
+              
+              // Auto-open profile popup ONLY for new incomplete users
+              const isStoredComplete = localStorage.getItem(`profile_completed_${firebaseUser.uid}`) === 'true';
+              const isComplete = Boolean(
+                data?.profileCompleted || 
+                data?.onboardingComplete || 
+                data?.profileStatus?.isComplete || 
+                isStoredComplete
+              );
 
-          if (!isComplete) {
-            setIsProfilePopupOpen(true);
+              if (!isComplete) {
+                setIsProfilePopupOpen(true);
+              } else {
+                setIsProfilePopupOpen(false);
+              }
+            } catch (err) {
+              console.error('Failed to load user profile:', err.message);
+            }
           } else {
-            setIsProfilePopupOpen(false);
+            setUser(null);
+            setDbUser(null);
+            setIdToken(null);
           }
-        } catch (err) {
-          console.error('Failed to load user profile:', err.message);
-        }
+          setLoading(false);
+        });
       } else {
-        setUser(null);
-        setDbUser(null);
-        setIdToken(null);
+        setLoading(false);
       }
+    } catch (err) {
+      console.warn('Auth subscription unavailable:', err?.message || err);
       setLoading(false);
-    });
+    }
     return unsub;
   }, []);
 
