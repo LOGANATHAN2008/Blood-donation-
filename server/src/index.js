@@ -98,6 +98,13 @@ io.on('connection', (socket) => {
 
 // ─── MongoDB + Server Start ───────────────────────────────────────────────────
 async function start() {
+  const PORT = process.env.PORT || 4000;
+  if (!process.env.VERCEL && process.env.NODE_ENV !== 'test') {
+    server.listen(PORT, () => {
+      console.log(`🚀 Server running on http://localhost:${PORT}`);
+    });
+  }
+
   try {
     let mongoUri = process.env.MONGODB_URI;
     if (mongoUri && mongoUri.includes('127.0.0.1')) {
@@ -114,16 +121,8 @@ async function start() {
     startRequestExpiryJob();
     startMedicineExpiryJob();
     console.log('✅ Cron jobs started');
-
-    const PORT = process.env.PORT || 4000;
-    if (!process.env.VERCEL && process.env.NODE_ENV !== 'test') {
-      server.listen(PORT, () => {
-        console.log(`🚀 Server running on http://localhost:${PORT}`);
-      });
-    }
   } catch (err) {
-    console.error('Failed to start server:', err);
-    if (!process.env.VERCEL && process.env.NODE_ENV !== 'test') process.exit(1);
+    console.warn('⚠️ MongoDB connection note:', err.message);
   }
 }
 
