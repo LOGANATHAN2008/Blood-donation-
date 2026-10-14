@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: lifeconnect-backend
+    runtime: node
+    plan: free
+    region: singapore # Closest to Tamil Nadu / India for fast latency
+    buildCommand: cd server && npm install
+    startCommand: cd server && npm start
+    envVars:
+      - key: PORT
+        value: 5000
+      - key: NODE_ENV
+        value: production
+      - key: CLIENT_URL
+        value: https://blood.loganathanm.in,http://localhost:5173
+      - key: MONGODB_URI
+        value: mongodb+srv://loganathan082008_db_user:mN8AqN8w8bOz7nkG@cluster0.ifb669x.mongodb.net/lifeconnect?retryWrites=true&w=majority
+      - key: ADMIN_PHONES
+        value: "+919876543210"
