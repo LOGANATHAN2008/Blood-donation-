@@ -27,7 +27,14 @@ exports.sendOtpEmail = async (email, otpCode) => {
         templateId,
         {
           email: email,
+          to_email: email,
+          user_email: email,
+          recipient: email,
+          to_name: email.split('@')[0],
           passcode: otpCode,
+          otp: otpCode,
+          code: otpCode,
+          message: otpCode,
           time: timeLimit
         },
         {

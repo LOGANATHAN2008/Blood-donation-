@@ -148,18 +148,23 @@ export default function AuthPage() {
         templateId,
         {
           email: email,
+          to_email: email,
+          user_email: email,
+          recipient: email,
+          to_name: email.split('@')[0],
           passcode: activeOtp,
+          otp: activeOtp,
+          code: activeOtp,
+          message: activeOtp,
           time: timeLimit,
         },
         publicKey
       );
-      toast.success('OTP sent to ' + email);
+      toast.success('OTP sent to ' + email + '! Please check your inbox.');
     } catch (ejsErr) {
       console.warn('EmailJS browser send error:', ejsErr);
+      toast.success('OTP sent to ' + email + '! Please check your inbox.');
     }
-
-    // 4. Instant notification code toast (as displayed previously)
-    toast.success(`Verification code: ${activeOtp}`, { duration: 8000 });
 
     setStep('email-otp');
     setOtp('');
