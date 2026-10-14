@@ -1,4 +1,3 @@
-import React from 'react';
 import { BRAND } from '../../config/brand';
 
 /**

@@ -5,31 +5,16 @@ import { defineConfig } from 'vite'
 export default defineConfig({
   plugins: [react()],
   resolve: {
-    dedupe: [
-      'react',
-      'react-dom',
-      'react/jsx-runtime',
-      'react/jsx-dev-runtime',
-      'react-router',
-      'react-router-dom'
-    ]
+    dedupe: ['react', 'react-dom']
   },
   optimizeDeps: {
     include: [
-      'react', 
-      'react-dom', 
-      'react-dom/client',
-      'react/jsx-runtime', 
-      'react/jsx-dev-runtime',
-      'react-router',
-      'react-router-dom',
       '@tanstack/react-query',
       'framer-motion', 
       'three', 
       '@react-three/fiber', 
       '@react-three/drei'
-    ],
-    force: true
+    ]
   },
   test: {
     globals: true,

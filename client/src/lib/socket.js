@@ -4,16 +4,24 @@ let socket;
 
 export function getSocket(token) {
   if (!socket || !socket.connected) {
-    const socketUrl = import.meta.env.VITE_API_URL
+    const socketUrl = import.meta.env.VITE_SOCKET_URL 
+      ? import.meta.env.VITE_SOCKET_URL 
+      : import.meta.env.VITE_API_URL
       ? import.meta.env.VITE_API_URL.replace(/\/api\/?$/, '')
-      : (typeof window !== 'undefined' && window.location.origin ? window.location.origin : 'http://localhost:4000');
+      : (typeof window !== 'undefined' && window.location.origin ? window.location.origin : 'http://localhost:5000');
 
     socket = io(socketUrl, {
       auth: { token },
-      transports: ['websocket', 'polling'],
+      transports: ['polling', 'websocket'],
       reconnection: true,
-      reconnectionAttempts: 10,
-      reconnectionDelay: 2000,
+      reconnectionAttempts: 4,
+      reconnectionDelay: 4000,
+      timeout: 8000,
+    });
+
+    socket.on('connect_error', (err) => {
+      // Silently fall back if the backend is serverless / host doesn't support persistent WebSockets
+      console.warn('Realtime sync status:', err.message);
     });
   }
   return socket;

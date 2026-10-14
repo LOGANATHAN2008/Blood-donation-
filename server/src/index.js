@@ -31,10 +31,10 @@ const app    = express();
 const server = http.createServer(app);
 
 // ─── CORS ────────────────────────────────────────────────────────────────────
-const allowedOrigins = (process.env.CLIENT_URL || 'http://localhost:5173').split(',').map(s => s.trim());
+const allowedOrigins = (process.env.CLIENT_URL || 'http://localhost:5173,https://blood.loganathanm.in,http://localhost:5000').split(',').map(s => s.trim());
 const corsOptions = {
   origin: (origin, cb) => {
-    if (!origin || allowedOrigins.includes(origin) || process.env.VERCEL || (typeof origin === 'string' && origin.endsWith('.vercel.app'))) {
+    if (!origin || allowedOrigins.includes(origin) || process.env.VERCEL || (typeof origin === 'string' && origin.includes('blood.loganathanm.in')) || (typeof origin === 'string' && origin.endsWith('.vercel.app'))) {
       return cb(null, true);
     }
     cb(new Error(`CORS: ${origin} not allowed`));
@@ -106,7 +106,7 @@ async function start() {
   }
 
   try {
-    let mongoUri = process.env.MONGODB_URI;
+    let mongoUri = process.env.MONGODB_URI || "mongodb+srv://loganathan082008_db_user:mN8AqN8w8bOz7nkG@cluster0.ifb669x.mongodb.net/lifeconnect?retryWrites=true&w=majority";
     if (mongoUri && mongoUri.includes('127.0.0.1')) {
       const { MongoMemoryServer } = require('mongodb-memory-server');
       const mongod = await MongoMemoryServer.create();

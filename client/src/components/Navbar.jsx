@@ -42,7 +42,7 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 flex items-center justify-between h-[52px]">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2 font-black text-xl">
-          <Logo variant="symbol" layoutId="brand-logo" />
+          <Logo variant="symbol" />
         </Link>
 
         {/* Desktop nav links */}
