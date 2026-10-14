@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { MapPin, Clock, Phone, Share2, Flag } from 'lucide-react';
+import { MapPin, Clock, Phone, Share2, Flag, Lock } from 'lucide-react';
 import BloodGroupBadge from './ui/BloodGroupBadge';
 import { useLang } from '../context/LangContext';
 import { useAuth } from '../context/AuthContext';
@@ -78,17 +78,29 @@ export default function RequestCard({ request, showActions, onStatusChange, onRe
         </p>
       )}
 
-      <div className="flex flex-wrap gap-2 pt-1">
-        <a
-          href={`tel:${request.contactPhone}`}
-          className="btn-primary py-2 text-sm"
-          aria-label={`Call ${request.contactPhone}`}
-        >
-          <Phone size={14} /> Call
-        </a>
-        <button onClick={handleWhatsApp} className="btn-secondary py-2 text-sm">
-          <Share2 size={14} /> {t('whatsapp')}
-        </button>
+      <div className="flex flex-wrap items-center gap-2 pt-1">
+        {!user ? (
+          <button
+            onClick={() => navigate('/auth', { state: { from: '/emergency' } })}
+            className="flex-1 flex items-center justify-center gap-2 py-2 px-3.5 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white font-semibold text-xs sm:text-sm rounded-xl shadow-sm hover:shadow active:scale-[0.98] transition-all"
+          >
+            <Lock size={13} className="shrink-0" />
+            <span>Login to Call & WhatsApp</span>
+          </button>
+        ) : (
+          <>
+            <a
+              href={`tel:${request.contactPhone}`}
+              className="btn-primary py-2 text-sm"
+              aria-label={`Call ${request.contactPhone}`}
+            >
+              <Phone size={14} /> Call
+            </a>
+            <button onClick={handleWhatsApp} className="btn-secondary py-2 text-sm">
+              <Share2 size={14} /> {t('whatsapp')}
+            </button>
+          </>
+        )}
         {isOwner && showActions && (
           <>
             <button

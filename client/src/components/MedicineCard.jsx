@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Pill, MapPin, Phone, Clock, AlertTriangle, Flag } from 'lucide-react';
+import { Pill, MapPin, Phone, Clock, AlertTriangle, Flag, Lock } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useLang } from '../context/LangContext';
 import { useAuth } from '../context/AuthContext';
 import api from '../lib/api';
@@ -22,6 +23,7 @@ const EXPIRY_BADGE = {
 export default function MedicineCard({ medicine, isOwner, onReserve, onGiven, onDelete, onReport }) {
   const { t }   = useLang();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [imgLoaded, setImgLoaded] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -101,16 +103,28 @@ export default function MedicineCard({ medicine, isOwner, onReserve, onGiven, on
           Always verify with a pharmacist before use.
         </div>
 
-        <div className="flex flex-wrap gap-2 pt-1">
-          {medicine.status === 'Available' && !isOwner && (
-            <button onClick={handleReserve} className="btn-primary py-2 text-sm" disabled={loading}>
-              <Pill size={14} /> {loading ? '…' : t('reserve')}
+        <div className="flex flex-wrap items-center gap-2 pt-1">
+          {!user ? (
+            <button
+              onClick={() => navigate('/auth', { state: { from: '/medicines' } })}
+              className="flex-1 flex items-center justify-center gap-2 py-2 px-3.5 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white font-semibold text-xs sm:text-sm rounded-xl shadow-sm hover:shadow active:scale-[0.98] transition-all"
+            >
+              <Lock size={13} className="shrink-0" />
+              <span>Login to Contact & Reserve</span>
             </button>
-          )}
-          {medicine.status === 'Available' && (
-            <a href={`tel:${medicine.contactPhone}`} className="btn-secondary py-2 text-sm">
-              <Phone size={14} /> Call
-            </a>
+          ) : (
+            <>
+              {medicine.status === 'Available' && !isOwner && (
+                <button onClick={handleReserve} className="btn-primary py-2 text-sm" disabled={loading}>
+                  <Pill size={14} /> {loading ? '…' : t('reserve')}
+                </button>
+              )}
+              {medicine.status === 'Available' && (
+                <a href={`tel:${medicine.contactPhone}`} className="btn-secondary py-2 text-sm">
+                  <Phone size={14} /> Call
+                </a>
+              )}
+            </>
           )}
           {medicine.status === 'Reserved' && isOwner && (
             <button onClick={() => onGiven?.()} className="btn-primary py-2 text-sm">
