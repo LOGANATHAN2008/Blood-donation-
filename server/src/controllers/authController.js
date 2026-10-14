@@ -38,14 +38,10 @@ exports.sendEmailOtp = async (req, res) => {
       { upsert: true, new: true }
     );
 
-    // Send email with safe fallback
-    try {
-      await emailService.sendOtpEmail(email, otpCode);
-    } catch (mailErr) {
-      console.warn('sendOtpEmail warning, will continue with devOtp:', mailErr.message);
-    }
+    // Send email — hard fail if EmailJS not configured
+    await emailService.sendOtpEmail(email, otpCode);
 
-    res.json({ message: 'OTP sent successfully', devOtp: process.env.NODE_ENV !== 'production' ? otpCode : undefined });
+    res.json({ message: 'OTP sent successfully' });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ error: 'Invalid email address.' });
@@ -64,8 +60,8 @@ exports.verifyEmailOtp = async (req, res) => {
     const email = rawEmail.toLowerCase().trim();
 
     const otpRecord = await EmailOtp.findOne({ email });
-    if (!otpRecord && code !== '123456') {
-      return res.status(400).json({ error: 'OTP expired or invalid.' });
+    if (!otpRecord) {
+      return res.status(400).json({ error: 'OTP expired or not found. Please request a new one.' });
     }
 
     if (otpRecord && otpRecord.attempts >= (process.env.OTP_MAX_ATTEMPTS || 5)) {
@@ -73,14 +69,12 @@ exports.verifyEmailOtp = async (req, res) => {
     }
 
     if (otpRecord) {
-      // Verify hash with constant-time comparison
-      const isValid = await bcrypt.compare(code, otpRecord.hash) || code === '123456';
+      const isValid = await bcrypt.compare(code, otpRecord.hash);
       if (!isValid) {
         otpRecord.attempts += 1;
         await otpRecord.save();
         return res.status(400).json({ error: 'Invalid OTP code.' });
       }
-      // OTP is valid. Delete it (single use)
       await EmailOtp.deleteOne({ _id: otpRecord._id });
     }
 
