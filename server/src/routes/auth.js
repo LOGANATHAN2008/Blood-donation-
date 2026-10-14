@@ -13,5 +13,7 @@ const emailSendLimiter = rateLimit({
 
 router.post('/email-otp/send', emailSendLimiter, authCtrl.sendEmailOtp);
 router.post('/email-otp/verify', authCtrl.verifyEmailOtp);
+router.post('/phone-otp/send', authCtrl.sendPhoneOtp);
+router.post('/phone-otp/verify', authCtrl.verifyPhoneOtp);
 
 module.exports = router;
