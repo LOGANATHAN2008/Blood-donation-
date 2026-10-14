@@ -102,22 +102,25 @@ export default function SosButton() {
     <>
       {/* Floating Circular SOS Button */}
       {!hasOtherModal && !isOpen && (
-        <div className="fixed z-40 right-4 bottom-20 md:bottom-8 md:right-8 select-none">
+        <div 
+          className="fixed z-40 right-4 md:right-8 select-none"
+          style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 5.5rem)' }}
+        >
           <motion.div
-            animate={{ scale: [1, 1.08, 1] }}
-            transition={{ repeat: Infinity, duration: 2, ease: 'easeInOut' }}
+            animate={{ scale: [1, 1.06, 1] }}
+            transition={{ repeat: Infinity, duration: 2.2, ease: 'easeInOut' }}
             className="relative flex items-center justify-center"
           >
             {/* Pulsing Outer Rings */}
-            <span className="absolute -inset-1.5 rounded-full bg-rose-500 opacity-60 animate-ping" />
-            <span className="absolute -inset-3 rounded-full bg-red-600/30 blur-sm pointer-events-none" />
+            <span className="absolute -inset-1.5 rounded-full bg-rose-500 opacity-60 animate-ping pointer-events-none" />
+            <span className="absolute -inset-2.5 rounded-full bg-red-600/30 blur-sm pointer-events-none" />
 
             <button
               id="sos-floating-trigger"
               onClick={() => setIsOpen(!isOpen)}
               aria-label={t('sosHelp')}
               aria-expanded={isOpen}
-              className="relative flex items-center justify-center w-14 h-14 md:w-16 md:h-16 rounded-full bg-gradient-to-tr from-red-600 via-rose-600 to-red-500 text-white font-black shadow-2xl shadow-rose-600/60 hover:brightness-110 active:scale-95 transition-transform focus:outline-none focus:ring-4 focus:ring-rose-400"
+              className="relative flex items-center justify-center w-14 h-14 md:w-16 md:h-16 rounded-full bg-gradient-to-tr from-red-600 via-rose-600 to-red-500 text-white font-black shadow-[0_8px_25px_rgba(225,29,72,0.55)] border border-white/30 hover:brightness-110 active:scale-90 transition-transform focus:outline-none focus:ring-4 focus:ring-rose-400/50"
             >
               <div className="flex flex-col items-center leading-none">
                 <span className="text-xl md:text-2xl animate-pulse">🆘</span>

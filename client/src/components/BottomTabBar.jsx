@@ -122,18 +122,18 @@ export default function BottomTabBar() {
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 90, opacity: 0 }}
           transition={{ duration: 0.22, ease: 'easeInOut' }}
-          className="md:hidden fixed bottom-5 left-4 right-4 z-40 touch-none bottom-tab-bar" 
+          className="md:hidden fixed left-4 right-4 z-40 touch-none bottom-tab-bar" 
+          style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 12px)' }}
           aria-label="Bottom navigation"
         >
-          {/* Outer iOS 27 Glass Pill */}
+          {/* Outer iOS Glass Pill */}
           <motion.div 
             ref={navRef}
             onPan={handleDrag}
             onPanEnd={handleDragEnd}
-            className="relative grid grid-cols-4 items-center p-1.5 rounded-full shadow-2xl bg-white/25 dark:bg-slate-900/40 backdrop-blur-3xl border border-white/40 dark:border-white/10"
+            className="relative grid grid-cols-4 items-center p-1.5 rounded-full shadow-[0_12px_36px_rgba(0,0,0,0.16)] bg-white/80 dark:bg-slate-900/85 backdrop-blur-3xl border border-white/40 dark:border-white/10"
             style={{
-              boxShadow: '0 20px 40px -10px rgba(0,0,0,0.15), inset 0 1px 1px rgba(255,255,255,0.5), inset 0 -1px 2px rgba(255,255,255,0.2)',
-              WebkitBackdropFilter: 'blur(32px) saturate(250%)'
+              WebkitBackdropFilter: 'blur(32px) saturate(200%)'
             }}
           >
             {/* Liquid Glass Active Indicator */}

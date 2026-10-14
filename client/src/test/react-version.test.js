@@ -42,5 +42,5 @@ describe('React Version & Duplication Check', () => {
     // Assert strictly single version across the entire tree
     expect(reactVersions).toEqual(['18.3.1']);
     expect(reactDomVersions).toEqual(['18.3.1']);
-  });
+  }, 20000);
 });

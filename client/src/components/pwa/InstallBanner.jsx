@@ -96,36 +96,38 @@ export default function InstallBanner() {
       <AnimatePresence>
         {isVisible && (
           <motion.div
-            initial={{ y: 50, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 50, opacity: 0 }}
-            className="fixed bottom-20 md:bottom-6 left-4 right-4 md:left-auto md:right-28 md:max-w-md z-40 p-4 rounded-3xl bg-gray-900/95 text-white backdrop-blur-md border border-rose-500/30 shadow-2xl flex items-center justify-between gap-3"
+            initial={{ y: -50, opacity: 0, scale: 0.95 }}
+            animate={{ y: 0, opacity: 1, scale: 1 }}
+            exit={{ y: -50, opacity: 0, scale: 0.95 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 350 }}
+            className="fixed top-16 md:top-auto md:bottom-6 left-4 right-4 md:left-auto md:right-28 md:max-w-sm z-50 p-3 md:p-3.5 rounded-2xl bg-gray-950/90 dark:bg-black/90 text-white backdrop-blur-2xl border border-white/15 shadow-[0_16px_36px_rgba(0,0,0,0.35)] flex items-center justify-between gap-3"
           >
-            <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-red-600 to-rose-500 flex items-center justify-center text-xl flex-shrink-0 shadow-md shadow-rose-600/30">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-rose-600 via-red-600 to-rose-500 flex items-center justify-center text-xl flex-shrink-0 shadow-md shadow-red-600/30">
                 🩸
               </div>
-              <div>
-                <h4 className="font-bold text-xs md:text-sm leading-tight text-white">
+              <div className="min-w-0">
+                <h4 className="font-bold text-xs leading-snug text-white truncate">
                   {t('installApp')}
                 </h4>
-                <p className="text-[11px] text-gray-300 mt-0.5 line-clamp-1">
-                  Offline access & 1-tap emergency dial
+                <p className="text-[11px] text-gray-300 line-clamp-1">
+                  Offline access • 1-tap SOS
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-shrink-0">
               <button
                 onClick={handleInstallClick}
-                className="py-2 px-3.5 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 text-white font-bold text-xs shadow-md transition active:scale-95"
+                className="py-1.5 px-3 rounded-full bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-md transition active:scale-95 uppercase tracking-wide"
               >
                 Install
               </button>
               <button
                 onClick={handleDismiss}
-                className="p-1.5 rounded-lg text-gray-400 hover:text-white text-xs"
-                title="Dismiss for 14 days"
+                className="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white text-xs flex items-center justify-center transition"
+                title="Dismiss"
+                aria-label="Dismiss banner"
               >
                 ✕
               </button>
