@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { User, Droplets, Bell, Settings, Lock, Activity, Download, HelpCircle, LogOut } from 'lucide-react';
+import { User, Droplets, Bell, Settings, Lock, Activity, Download, HelpCircle, LogOut, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useLang } from '../context/LangContext';
 import api from '../lib/api';
@@ -16,11 +16,13 @@ import SettingsPrivacy from '../components/settings/SettingsPrivacy';
 import SettingsActivity from '../components/settings/SettingsActivity';
 import SettingsData from '../components/settings/SettingsData';
 import SettingsHelp from '../components/settings/SettingsHelp';
+import SettingsPermissions from '../components/settings/SettingsPermissions';
 
 const SECTIONS = [
   { id: 'profile', icon: User, label: 'Profile' },
   { id: 'donor', icon: Droplets, label: 'Donor Settings' },
   { id: 'notifications', icon: Bell, label: 'Notifications' },
+  { id: 'permissions', icon: ShieldCheck, label: 'Permissions' },
   { id: 'preferences', icon: Settings, label: 'App Preferences' },
   { id: 'privacy', icon: Lock, label: 'Privacy & Security' },
   { id: 'activity', icon: Activity, label: 'My Activity' },
@@ -75,6 +77,7 @@ export default function SettingsPage() {
       case 'profile': return <SettingsProfile {...props} />;
       case 'donor': return <SettingsDonor {...props} />;
       case 'notifications': return <SettingsNotifications {...props} />;
+      case 'permissions': return <SettingsPermissions />;
       case 'preferences': return <SettingsPreferences {...props} />;
       case 'privacy': return <SettingsPrivacy {...props} />;
       case 'activity': return <SettingsActivity {...props} />;
