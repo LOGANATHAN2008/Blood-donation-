@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { MapPin, Clock, Phone, Share2, Flag, Lock } from 'lucide-react';
+import { MapPin, Clock, Phone, Share2, Flag, Lock, CheckCircle, AlertCircle } from 'lucide-react';
 import BloodGroupBadge from './ui/BloodGroupBadge';
 import { useLang } from '../context/LangContext';
 import { useAuth } from '../context/AuthContext';
@@ -21,6 +21,10 @@ export default function RequestCard({ request, showActions, onStatusChange, onRe
   const isOwner = user?.uid === request.uid;
 
   const handleWhatsApp = () => {
+    if (!user) {
+      navigate('/auth', { state: { from: '/requests' } });
+      return;
+    }
     const msg = encodeURIComponent(
       `🩸 URGENT Blood Request!\nBlood Group: ${request.bloodGroup}\nUnits: ${request.units}\nHospital: ${request.hospital}, ${request.district}\nContact: ${request.contactPhone}\nNeeded by: ${neededByDate}\n\nShare via Life Connect`
     );
@@ -39,97 +43,95 @@ export default function RequestCard({ request, showActions, onStatusChange, onRe
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 8 }}
+      initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      className="glass-card p-2.5 sm:p-3 rounded-xl card-lift border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-md transition-all space-y-1.5"
+      className="glass-card p-3 sm:p-5 card-lift flex flex-col justify-between space-y-2.5 sm:space-y-3 rounded-2xl border border-pink-50/80 dark:border-slate-800"
     >
-      {/* Row 1: Badges, Name, Units */}
-      <div className="flex items-center justify-between gap-1.5">
-        <div className="flex items-center gap-1.5 min-w-0">
-          <BloodGroupBadge group={request.bloodGroup} className="text-xs px-2 py-0.5 font-black shrink-0" />
-          <h3 className="font-bold text-sm text-ink dark:text-white truncate">
+      {/* Top Header: Badges & Patient Name */}
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-1.5 flex-wrap mb-1">
+            <span className={`${URGENCY_STYLES[request.urgency] || URGENCY_STYLES.Normal} text-[9px] sm:text-xs`}>
+              {t(request.urgency)}
+            </span>
+            <BloodGroupBadge group={request.bloodGroup} className="text-[9px] sm:text-xs" />
+            <span className="inline-flex items-center gap-0.5 sm:gap-1 text-[9px] sm:text-xs font-semibold text-green-700 dark:text-green-400 bg-green-100 dark:bg-green-900/30 px-1.5 sm:px-2 py-0.5 rounded-full">
+              <CheckCircle size={9} className="sm:w-3 sm:h-3" /> Verified
+            </span>
+          </div>
+          <h3 className="font-bold text-sm sm:text-base text-ink dark:text-white leading-tight truncate">
             {request.patientName}
           </h3>
-          <span className={`${URGENCY_STYLES[request.urgency] || URGENCY_STYLES.Normal} text-[9px] py-0.5 px-1.5 uppercase tracking-wider font-extrabold shrink-0`}>
-            {t(request.urgency)}
+        </div>
+        <span className="shrink-0 text-[9px] sm:text-xs font-bold text-white bg-green-500 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md sm:rounded-lg flex items-center gap-1">
+          <Clock size={9} className="sm:w-[11px] sm:h-[11px]" /> {request.units} Unit{request.units > 1 ? 's' : ''}
+        </span>
+      </div>
+
+      {/* Address */}
+      <div className="space-y-0.5 sm:space-y-1 text-xs sm:text-sm text-gray-600 dark:text-gray-300 flex-1">
+        <div className="flex items-start gap-1.5">
+          <MapPin size={12} className="text-brand-400 shrink-0 mt-0.5 sm:w-[14px] sm:h-[14px]" />
+          <span className="line-clamp-2 sm:line-clamp-none leading-snug">
+            {request.hospital}, {request.city || request.district}
           </span>
         </div>
-        <div className="shrink-0 flex items-center gap-1 bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 font-extrabold text-xs px-2 py-0.5 rounded-md border border-red-100 dark:border-red-900/40">
-          <span>{request.units}</span>
-          <span className="text-[10px] font-normal opacity-75">unit{request.units > 1 ? 's' : ''}</span>
-        </div>
       </div>
 
-      {/* Row 2: Location & Needed time (compact inline) */}
-      <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 flex-wrap">
-        <div className="flex items-center gap-1 min-w-0 max-w-[58%]">
-          <MapPin size={11} className="text-brand-500 shrink-0" />
-          <span className="truncate">{request.hospital}, {request.city || request.district}</span>
-        </div>
-        <span className="text-gray-300 dark:text-gray-600">•</span>
-        <div className="flex items-center gap-1 shrink-0 text-[11px] text-amber-600 dark:text-amber-400 font-medium">
-          <Clock size={11} className="shrink-0" />
-          <span>{neededByDate}</span>
-        </div>
-      </div>
-
-      {/* Row 3: Note (only if present, 1 clean line) */}
-      {request.note && (
-        <p className="text-[11px] text-gray-500 dark:text-gray-400 bg-slate-50 dark:bg-slate-800/50 rounded-md px-2 py-0.5 truncate italic">
-          "{request.note}"
-        </p>
-      )}
-
-      {/* Row 4: Actions (Sleek compact bar) */}
-      <div className="flex items-center justify-between gap-1.5 pt-0.5 border-t border-slate-100 dark:border-slate-800/80">
+      {/* Two Action Buttons: Call & WhatsApp */}
+      <div className="flex flex-wrap gap-2 pt-1">
         {!user ? (
-          <button
-            onClick={() => navigate('/auth', { state: { from: '/emergency' } })}
-            className="w-full flex items-center justify-center gap-1.5 py-1 px-3 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white font-semibold text-xs rounded-lg shadow-sm active:scale-[0.98] transition-all"
-          >
-            <Lock size={11} className="shrink-0" />
-            <span>Login to Call & WhatsApp</span>
-          </button>
+          <>
+            <button
+              onClick={() => navigate('/auth', { state: { from: '/requests' } })}
+              className="btn-primary py-1.5 sm:py-2 text-[11px] sm:text-sm flex-1 justify-center min-h-[32px] sm:min-h-[40px] px-2 sm:px-6 rounded-lg sm:rounded-xl font-bold"
+              title="Login to Call"
+            >
+              <Lock size={12} className="sm:w-3.5 sm:h-3.5" /> Call
+            </button>
+            <button
+              onClick={() => navigate('/auth', { state: { from: '/requests' } })}
+              className="btn-secondary py-1.5 sm:py-2 text-[11px] sm:text-sm flex-1 justify-center min-h-[32px] sm:min-h-[40px] px-2 sm:px-6 rounded-lg sm:rounded-xl font-bold"
+              title="Login to WhatsApp"
+            >
+              <Share2 size={12} className="sm:w-3.5 sm:h-3.5" /> WhatsApp
+            </button>
+          </>
         ) : (
-          <div className="flex items-center gap-1.5 w-full">
+          <>
             <a
               href={`tel:${request.contactPhone}`}
-              className="flex-1 btn-primary py-1 px-2.5 text-xs rounded-lg justify-center font-bold"
-              aria-label={`Call ${request.contactPhone}`}
+              className="btn-primary py-1.5 sm:py-2 text-[11px] sm:text-sm flex-1 justify-center min-h-[32px] sm:min-h-[40px] px-2 sm:px-6 rounded-lg sm:rounded-xl font-bold"
             >
-              <Phone size={11} /> Call
+              <Phone size={12} className="sm:w-3.5 sm:h-3.5" /> Call
             </a>
             <button
               onClick={handleWhatsApp}
-              className="flex-1 btn-secondary py-1 px-2.5 text-xs rounded-lg justify-center font-bold"
+              className="btn-secondary py-1.5 sm:py-2 text-[11px] sm:text-sm flex-1 justify-center min-h-[32px] sm:min-h-[40px] px-2 sm:px-6 rounded-lg sm:rounded-xl font-bold"
             >
-              <Share2 size={11} /> WhatsApp
+              <Share2 size={12} className="sm:w-3.5 sm:h-3.5" /> WhatsApp
             </button>
-            {isOwner && showActions && (
-              <>
-                <button
-                  onClick={() => handleStatusChange('Fulfilled')}
-                  className="btn-ghost py-1 px-2 text-[11px] text-green-600 font-bold"
-                >
-                  Done
-                </button>
-                <button
-                  onClick={() => handleStatusChange('Cancelled')}
-                  className="btn-ghost py-1 px-2 text-[11px] text-gray-400"
-                >
-                  Cancel
-                </button>
-              </>
-            )}
-            <button
-              onClick={() => onReport?.(request._id)}
-              className="btn-ghost p-1 text-gray-400 hover:text-red-500 rounded"
-              aria-label="Report"
-            >
-              <Flag size={11} />
-            </button>
-          </div>
+          </>
         )}
+      </div>
+
+      {/* Footer Details: Needed by, Note & Report */}
+      <div className="pt-2 border-t border-gray-100 dark:border-gray-800 space-y-1 sm:space-y-2 mt-1 sm:mt-0">
+        <div className="flex items-center gap-1 text-[9px] sm:text-xs text-amber-600 dark:text-amber-400 font-medium">
+          <AlertCircle size={9} className="sm:w-3 sm:h-3" /> Needed by {neededByDate}
+        </div>
+        
+        <div className="flex items-center justify-between text-[9px] sm:text-[11px] text-gray-400 dark:text-gray-500">
+          <div className="leading-tight truncate max-w-[75%]">
+            {request.note ? `Note: ${request.note}` : 'Verified Emergency Request'}
+          </div>
+          <button
+            onClick={() => onReport?.(request._id)}
+            className="flex items-center gap-0.5 sm:gap-1 hover:text-red-500 transition-colors w-fit ml-auto"
+          >
+            <Flag size={8} className="sm:w-2.5 sm:h-2.5" /> Report
+          </button>
+        </div>
       </div>
     </motion.div>
   );
