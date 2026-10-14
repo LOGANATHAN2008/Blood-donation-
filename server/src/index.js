@@ -123,6 +123,23 @@ async function start() {
     console.log('✅ Cron jobs started');
   } catch (err) {
     console.warn('⚠️ MongoDB connection note:', err.message);
+    // Auto-retry connection every 5 seconds until connected
+    const retryInterval = setInterval(async () => {
+      if (mongoose.connection.readyState === 1) {
+        clearInterval(retryInterval);
+        return;
+      }
+      try {
+        console.log('🔄 Retrying MongoDB connection...');
+        await mongoose.connect(mongoUri, { serverSelectionTimeoutMS: 8000 });
+        console.log('✅ MongoDB connected successfully on retry!');
+        startRequestExpiryJob();
+        startMedicineExpiryJob();
+        clearInterval(retryInterval);
+      } catch (retryErr) {
+        console.warn('⚠️ Retry failed, will try again in 5s:', retryErr.message);
+      }
+    }, 5000);
   }
 }
 
