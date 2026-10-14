@@ -17,3 +17,11 @@ services:
         value: mongodb+srv://loganathan082008_db_user:mN8AqN8w8bOz7nkG@cluster0.ifb669x.mongodb.net/lifeconnect?retryWrites=true&w=majority
       - key: ADMIN_PHONES
         value: "+919876543210"
+      - key: EMAILJS_SERVICE_ID
+        value: service_is7k0an
+      - key: EMAILJS_TEMPLATE_ID
+        value: template_1fdzjvh
+      - key: EMAILJS_PUBLIC_KEY
+        value: u4LiwIlIS0XfrS5Mq
+      - key: EMAILJS_PRIVATE_KEY
+        value: 4R87_2d9gmMehakFqiHLd

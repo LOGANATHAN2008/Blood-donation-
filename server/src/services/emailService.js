@@ -14,10 +14,10 @@ const createTransporter = () => {
 };
 
 exports.sendOtpEmail = async (email, otpCode) => {
-  const serviceId = process.env.EMAILJS_SERVICE_ID;
-  const templateId = process.env.EMAILJS_TEMPLATE_ID;
-  const publicKey = process.env.EMAILJS_PUBLIC_KEY;
-  const privateKey = process.env.EMAILJS_PRIVATE_KEY;
+  const serviceId = process.env.EMAILJS_SERVICE_ID || 'service_is7k0an';
+  const templateId = process.env.EMAILJS_TEMPLATE_ID || 'template_1fdzjvh';
+  const publicKey = process.env.EMAILJS_PUBLIC_KEY || 'u4LiwIlIS0XfrS5Mq';
+  const privateKey = process.env.EMAILJS_PRIVATE_KEY || '4R87_2d9gmMehakFqiHLd';
 
   if (serviceId && templateId && publicKey) {
     try {
