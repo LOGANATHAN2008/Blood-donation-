@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lifeconnect-v1';
+const CACHE_NAME = 'lifeconnect-v2';
 const OFFLINE_URL = '/offline.html';
 
 const ASSETS_TO_CACHE = [
