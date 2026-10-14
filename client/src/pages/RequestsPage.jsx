@@ -207,7 +207,7 @@ export default function RequestsPage() {
         <EmptyState type="requests" title={t('emptyRequests')} message="Post a blood request and we'll help find matching donors." />
       ) : (
         <>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-2.5 sm:gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {(data?.data || []).map(r => (
               <RequestCard
                 key={r._id}
