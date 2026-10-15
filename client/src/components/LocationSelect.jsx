@@ -4,11 +4,17 @@ import api from '../lib/api';
 import { Search, X, ChevronDown, MapPin } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
+import indiaDistrictsData from '../lib/indiaDistricts.json';
+
 // Global cache for districts per state to avoid network requests on re-render
 const districtCache = new Map();
 
 function LocationSelectComponent({ state, setState, district, setDistrict, city, setCity, hideCity, disableAutoLoad = false }) {
-  const [districts, setDistricts] = useState(() => (state && districtCache.get(state)) || []);
+  const [districts, setDistricts] = useState(() => {
+    if (state && districtCache.has(state)) return districtCache.get(state);
+    if (state && indiaDistrictsData[state]) return indiaDistrictsData[state];
+    return [];
+  });
   const [loading, setLoading] = useState(false);
   const [showStateOptions, setShowStateOptions] = useState(false);
   const [stateSearch, setStateSearch] = useState('');
@@ -43,9 +49,12 @@ function LocationSelectComponent({ state, setState, district, setDistrict, city,
       return;
     }
 
+    const staticList = indiaDistrictsData[state] || [];
     if (districtCache.has(state)) {
       setDistricts(districtCache.get(state));
       return;
+    } else if (staticList.length > 0) {
+      setDistricts(staticList);
     }
 
     let isMounted = true;
@@ -54,12 +63,18 @@ function LocationSelectComponent({ state, setState, district, setDistrict, city,
       .then(r => {
         if (!isMounted) return;
         const list = r.data.data || [];
-        districtCache.set(state, list);
-        setDistricts(list);
+        if (list.length > 0) {
+          districtCache.set(state, list);
+          setDistricts(list);
+        }
       })
       .catch(() => {
         if (!isMounted) return;
-        setDistricts(['Other']);
+        if (staticList.length > 0) {
+          setDistricts(staticList);
+        } else {
+          setDistricts(['Other']);
+        }
       })
       .finally(() => {
         if (isMounted) setLoading(false);
@@ -174,6 +189,9 @@ function LocationSelectComponent({ state, setState, district, setDistrict, city,
         disabled={!state || loading}
       >
         <option value="" className="bg-white dark:bg-gray-800 text-gray-500">{loading ? 'Loading districts...' : 'Select District'}</option>
+        {district && !districts.includes(district) && (
+          <option value={district} className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">{district}</option>
+        )}
         {districts.map((d) => (
           <option key={d} value={d} className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">{d}</option>
         ))}

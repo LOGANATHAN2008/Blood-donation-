@@ -1,9 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Search } from 'lucide-react';
+import { Search, Navigation, Loader2 } from 'lucide-react';
 import { useLang } from '../../context/LangContext';
 import LocationSelect from '../LocationSelect';
+import api from '../../lib/api';
+import toast from 'react-hot-toast';
+
+import { detectLiveLocation } from '../../lib/liveLocation';
 
 const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 
@@ -14,6 +18,7 @@ export default function QuickSearchCard() {
   const [bloodGroup, setBloodGroup] = useState('');
   const [state, setState] = useState('');
   const [district, setDistrict] = useState('');
+  const [locating, setLocating] = useState(false);
 
   // Remember last choices
   useEffect(() => {
@@ -27,6 +32,38 @@ export default function QuickSearchCard() {
       } catch (e) {}
     }
   }, []);
+
+  const handleLiveLocation = async () => {
+    setLocating(true);
+    const toastId = toast.loading('Detecting your live location...');
+
+    try {
+      const loc = await detectLiveLocation();
+      if (loc.state) {
+        setState(loc.state);
+      }
+      if (loc.district) {
+        setDistrict(loc.district);
+      }
+      
+      const locStr = [loc.district, loc.state].filter(Boolean).join(', ');
+      if (locStr) {
+        toast.success(`📍 Live Location: ${locStr}`, { id: toastId });
+        localStorage.setItem('lifeconnect_last_search', JSON.stringify({ 
+          bg: bloodGroup, 
+          st: loc.state, 
+          dt: loc.district 
+        }));
+      } else {
+        toast.error('Could not detect district. Please select from dropdown.', { id: toastId });
+      }
+    } catch (err) {
+      console.error('Location error:', err);
+      toast.error(err.message || 'Could not detect live location. Please select manually.', { id: toastId });
+    } finally {
+      setLocating(false);
+    }
+  };
 
   const handleSearch = () => {
     localStorage.setItem('lifeconnect_last_search', JSON.stringify({ bg: bloodGroup, st: state, dt: district }));
@@ -69,9 +106,30 @@ export default function QuickSearchCard() {
 
         {/* Location Select */}
         <div className="w-full md:w-5/12">
-          <label className="block text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-            Location
-          </label>
+          <div className="flex items-center justify-between mb-2">
+            <label className="text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300">
+              Location
+            </label>
+            <button
+              type="button"
+              onClick={handleLiveLocation}
+              disabled={locating}
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 bg-brand-50 hover:bg-brand-100 dark:bg-brand-950/60 dark:hover:bg-brand-900/60 px-2.5 py-1 rounded-full transition-all border border-brand-200 dark:border-brand-800/60 shadow-sm active:scale-95 disabled:opacity-60 cursor-pointer"
+              title="Use current GPS live location"
+            >
+              {locating ? (
+                <>
+                  <Loader2 size={13} className="animate-spin text-brand-600 dark:text-brand-400" />
+                  <span>Detecting GPS...</span>
+                </>
+              ) : (
+                <>
+                  <Navigation size={13} className="text-brand-600 dark:text-brand-400 fill-brand-600/20" />
+                  <span>Use Live Location</span>
+                </>
+              )}
+            </button>
+          </div>
           <LocationSelect
             state={state}
             setState={setState}
