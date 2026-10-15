@@ -51,7 +51,7 @@ export default function Hero() {
   const txt = translations[activeLang];
 
   return (
-    <section className="relative z-20 min-h-[90vh] flex flex-col justify-center pt-24 pb-32 bg-surface dark:bg-surface-dark">
+    <section className="relative z-20 min-h-0 lg:min-h-[90vh] flex flex-col justify-center pt-20 sm:pt-24 pb-6 sm:pb-24 lg:pb-36 bg-surface dark:bg-surface-dark">
       {/* Background Mesh Gradient Blobs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-brand-200/40 dark:bg-brand-900/40 mix-blend-multiply dark:mix-blend-lighten blur-[120px] animate-blob" />
@@ -61,14 +61,14 @@ export default function Hero() {
 
       {/* Main Content Grid */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full flex-grow flex items-center">
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-8 items-center w-full">
+        <div className="grid lg:grid-cols-2 gap-8 lg:gap-8 items-center w-full">
           
           {/* Left Text Content */}
           <motion.div 
             initial={{ opacity: 0, x: prefersReducedMotion ? 0 : -30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, ease: "easeOut" }}
-            className="flex flex-col items-center lg:items-start text-center lg:text-left space-y-6"
+            className="flex flex-col items-center lg:items-start text-center lg:text-left space-y-4 sm:space-y-6"
           >
             {/* Badge */}
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white dark:bg-brand-950 border border-brand-100 dark:border-brand-800 shadow-sm">
@@ -82,22 +82,22 @@ export default function Hero() {
             </div>
 
             {/* Headline */}
-            <h1 className="text-5xl sm:text-6xl lg:text-[4.5rem] font-black leading-[1.1] tracking-tight text-ink dark:text-white">
+            <h1 className="text-3xl sm:text-5xl lg:text-[4.2rem] font-black leading-[1.15] tracking-tight text-ink dark:text-white">
               {txt.h1}
             </h1>
 
             {/* Subtext */}
-            <p className="text-lg sm:text-xl text-gray-600 dark:text-gray-300 max-w-2xl leading-relaxed">
+            <p className="text-base sm:text-xl text-gray-600 dark:text-gray-300 max-w-2xl leading-relaxed">
               {txt.sub}
             </p>
 
             {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto pt-4">
-              <Link to="/donors" className="btn-primary h-[52px] px-8 text-lg w-full sm:w-auto shadow-glass hover:shadow-glass-lg transition-all transform hover:-translate-y-1">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full sm:w-auto pt-2 sm:pt-4">
+              <Link to="/donors" className="btn-primary h-[48px] sm:h-[52px] px-6 sm:px-8 text-base sm:text-lg w-full sm:w-auto shadow-glass hover:shadow-glass-lg transition-all transform hover:-translate-y-1">
                 <HeartPulse size={20} className="mr-2" />
                 {txt.becomeDonor}
               </Link>
-              <Link to="/emergency" className="h-[52px] px-8 text-lg font-bold rounded-full border-2 border-brand-200 dark:border-brand-800 bg-white/50 dark:bg-ink/50 text-brand-700 dark:text-brand-300 flex items-center justify-center backdrop-blur-sm hover:border-brand-400 hover:bg-white dark:hover:bg-brand-950 transition-all">
+              <Link to="/emergency" className="h-[48px] sm:h-[52px] px-6 sm:px-8 text-base sm:text-lg font-bold rounded-full border-2 border-brand-200 dark:border-brand-800 bg-white/50 dark:bg-ink/50 text-brand-700 dark:text-brand-300 flex items-center justify-center backdrop-blur-sm hover:border-brand-400 hover:bg-white dark:hover:bg-brand-950 transition-all">
                 <Droplet size={20} className="mr-2" />
                 {txt.needBlood}
               </Link>
@@ -108,9 +108,9 @@ export default function Hero() {
             </Link>
 
             {/* Trust Row */}
-            <div className="flex flex-wrap justify-center lg:justify-start gap-4 sm:gap-6 pt-8 mt-4 border-t border-gray-200/60 dark:border-white/10 w-full">
+            <div className="flex flex-wrap justify-center lg:justify-start gap-3 sm:gap-6 pt-4 sm:pt-8 mt-2 sm:mt-4 border-t border-gray-200/60 dark:border-white/10 w-full">
               {[txt.trust1, txt.trust2, txt.trust3].map((text, i) => (
-                <div key={i} className="flex items-center gap-1.5 text-sm font-medium text-gray-500 dark:text-gray-400">
+                <div key={i} className="flex items-center gap-1.5 text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">
                   <ShieldCheck size={16} className="text-brand-500" />
                   {text}
                 </div>
@@ -130,8 +130,8 @@ export default function Hero() {
         </div>
       </div>
 
-      {/* Overlapping Quick Search Card */}
-      <div className="absolute bottom-0 left-0 w-full translate-y-1/2 px-4 sm:px-6">
+      {/* Quick Search Card */}
+      <div className="w-full mt-6 sm:mt-10 lg:mt-0 lg:absolute lg:bottom-0 lg:left-0 lg:translate-y-1/2 px-3 sm:px-6 z-30">
         <QuickSearchCard />
       </div>
     </section>

@@ -120,15 +120,18 @@ export default function BloodDropVisual() {
     </motion.div>
   );
 
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
+  const radius = isMobile ? 95 : 140;
+
   return (
-    <div ref={containerRef} className="relative w-full max-w-md mx-auto aspect-square flex items-center justify-center">
-      <div className="absolute inset-0 bg-brand-500/20 dark:bg-brand-600/20 blur-[100px] rounded-full" />
+    <div ref={containerRef} className="relative w-full max-w-[220px] sm:max-w-[300px] lg:max-w-md mx-auto aspect-square flex items-center justify-center my-2 lg:my-0">
+      <div className="absolute inset-0 bg-brand-500/20 dark:bg-brand-600/20 blur-[60px] sm:blur-[100px] rounded-full" />
 
       {forceFallback ? (
         fallbackDrop
       ) : (
-        <div className="relative z-10 w-[120%] h-[120%]">
-          {/* We expand the wrapper so the 3D particles don't get cut off */}
+        <div className="relative z-10 w-full h-full lg:w-[120%] lg:h-[120%] flex items-center justify-center">
+          {/* We expand the wrapper on desktop so the 3D particles don't get cut off */}
           <Suspense fallback={<div className="absolute inset-0 flex items-center justify-center scale-[0.833]">{fallbackDrop}</div>}>
             <BloodDrop3D activeGroup={activeGroup} onClick={cycleGroup} inView={isInView} />
           </Suspense>
@@ -138,7 +141,6 @@ export default function BloodDropVisual() {
       {/* Orbiting Blood Group Chips */}
       {BLOOD_GROUPS.map((group, i) => {
         const angle = (i / BLOOD_GROUPS.length) * Math.PI * 2;
-        const radius = 140;
         const isCompatible = compatibleWith.includes(group);
         
         return (
@@ -151,7 +153,7 @@ export default function BloodDropVisual() {
           >
             <motion.div
               className={`
-                w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center font-bold border transition-all duration-500
+                w-7 h-7 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold border transition-all duration-500
                 ${isCompatible 
                   ? 'bg-brand-500 text-white border-brand-400 scale-110 shadow-lg shadow-brand-500/50' 
                   : 'bg-white/80 dark:bg-brand-900/80 backdrop-blur text-gray-400 dark:text-gray-500 border-gray-200 dark:border-brand-800 opacity-60'}

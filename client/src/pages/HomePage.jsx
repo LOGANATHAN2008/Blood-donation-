@@ -102,7 +102,7 @@ export default function HomePage() {
       <Hero />
 
       {/* ─── Live Stats ───────────────────────────────────────────── */}
-      <section className="max-w-4xl mx-auto px-4 pt-20 pb-10">
+      <section className="max-w-4xl mx-auto px-4 pt-8 sm:pt-16 lg:pt-24 pb-10">
         <div className="flex items-center justify-center gap-2 mb-6">
           <span className="live-dot" aria-hidden="true" />
           <span className="text-sm font-semibold text-gray-600 dark:text-gray-300">{t('liveUpdates')}</span>

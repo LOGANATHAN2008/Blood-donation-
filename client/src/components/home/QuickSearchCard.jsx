@@ -41,44 +41,35 @@ export default function QuickSearchCard() {
       initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.3, duration: 0.6 }}
-      className="glass-card p-4 md:p-6 rounded-3xl shadow-glass-lg border border-white/20 dark:border-white/5 relative z-30 mx-4 md:mx-auto max-w-4xl backdrop-blur-xl bg-white/60 dark:bg-surface-dark/80"
+      className="glass-card p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-glass-lg border border-white/40 dark:border-white/10 mx-auto w-full max-w-4xl backdrop-blur-xl bg-white/90 dark:bg-surface-dark/95"
     >
       <div className="flex flex-col md:flex-row gap-4 items-end">
         {/* Blood Group Select */}
-        <div className="w-full md:w-1/3">
-          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+        <div className="w-full md:w-5/12">
+          <label className="block text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
             Blood Group (Optional)
           </label>
-          <div className="flex flex-wrap gap-2">
-            {BLOOD_GROUPS.slice(0, 4).map(bg => (
+          <div className="grid grid-cols-4 sm:flex sm:flex-wrap gap-1.5 sm:gap-2">
+            {BLOOD_GROUPS.map(bg => (
               <button
                 key={bg}
+                type="button"
                 onClick={() => setBloodGroup(bg === bloodGroup ? '' : bg)}
-                className={`px-3 py-1.5 rounded-full text-sm font-bold transition-all border ${
+                className={`py-1.5 px-2 sm:px-3 rounded-xl text-xs sm:text-sm font-bold transition-all border text-center ${
                   bg === bloodGroup 
-                    ? 'bg-brand-600 text-white border-brand-600 shadow-md' 
+                    ? 'bg-brand-600 text-white border-brand-600 shadow-md scale-105' 
                     : 'bg-white dark:bg-brand-950 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-brand-300'
                 }`}
               >
                 {bg}
               </button>
             ))}
-            <select 
-              className="px-3 py-1.5 rounded-full text-sm font-bold bg-white dark:bg-brand-950 border border-gray-200 dark:border-gray-700 cursor-pointer focus:ring-2 focus:ring-brand-500"
-              value={BLOOD_GROUPS.slice(4).includes(bloodGroup) ? bloodGroup : ''}
-              onChange={(e) => setBloodGroup(e.target.value)}
-            >
-              <option value="">More...</option>
-              {BLOOD_GROUPS.slice(4).map(bg => (
-                <option key={bg} value={bg}>{bg}</option>
-              ))}
-            </select>
           </div>
         </div>
 
         {/* Location Select */}
-        <div className="w-full md:w-1/2">
-          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+        <div className="w-full md:w-5/12">
+          <label className="block text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
             Location
           </label>
           <LocationSelect
@@ -93,10 +84,10 @@ export default function QuickSearchCard() {
         </div>
 
         {/* Action Button */}
-        <div className="w-full md:w-auto mt-2 md:mt-0">
+        <div className="w-full md:w-auto mt-1 md:mt-0">
           <button
             onClick={handleSearch}
-            className="w-full md:w-auto h-[46px] px-8 rounded-full brand-gradient text-white font-bold shadow-lg hover:shadow-brand-500/30 transition-all flex items-center justify-center gap-2 transform hover:-translate-y-0.5 active:translate-y-0"
+            className="w-full md:w-auto h-[44px] sm:h-[46px] px-6 sm:px-8 rounded-xl sm:rounded-full brand-gradient text-white font-bold shadow-lg hover:shadow-brand-500/30 transition-all flex items-center justify-center gap-2 transform hover:-translate-y-0.5 active:translate-y-0 text-sm sm:text-base"
           >
             <Search size={18} />
             Find Donors
