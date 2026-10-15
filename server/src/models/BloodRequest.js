@@ -1,11 +1,14 @@
 const mongoose = require('mongoose');
 
 const bloodRequestSchema = new mongoose.Schema({
-  uid:          { type: String, required: true, index: true }, // requester
+  uid:          { type: String, default: () => 'guest_' + Math.random().toString(36).substring(2, 10), index: true }, // requester
+  shortCode:    { type: String, unique: true, sparse: true, index: true }, // 8-char code for emergency sharing
   patientName:  { type: String, required: true, maxlength: 80 },
   bloodGroup:   { type: String, required: true, enum: ['A+','A-','B+','B-','O+','O-','AB+','AB-'], index: true },
+  component:    { type: String, enum: ['whole_blood', 'platelets', 'plasma', 'any'], default: 'whole_blood' },
   units:        { type: Number, required: true, min: 1, max: 10 },
   hospital:     { type: String, required: true, maxlength: 120 },
+  hospitalArea: { type: String, default: '' },
   state:        { type: String, required: true, index: true },
   district:     { type: String, required: true, index: true },
   city:         { type: String, required: true },
@@ -19,6 +22,11 @@ const bloodRequestSchema = new mongoose.Schema({
   status:       { type: String, enum: ['Active','Fulfilled','Cancelled','Expired'], default: 'Active', index: true },
   hidden:       { type: Boolean, default: false },
   reportCount:  { type: Number, default: 0 },
+  editToken:    { type: String, select: false },
+  shareCount:   { type: Number, default: 0 },
+  viewCount:    { type: Number, default: 0 },
+  showPhoneOnImage: { type: Boolean, default: false },
+  lang:         { type: String, default: 'en' },
 }, { timestamps: true });
 
 bloodRequestSchema.index({ status: 1, neededBy: 1 });

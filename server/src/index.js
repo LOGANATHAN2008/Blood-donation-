@@ -31,10 +31,27 @@ const app    = express();
 const server = http.createServer(app);
 
 // ─── CORS ────────────────────────────────────────────────────────────────────
-const allowedOrigins = (process.env.CLIENT_URL || 'http://localhost:5173,https://blood.loganathanm.in,http://localhost:5000').split(',').map(s => s.trim());
+const defaultOrigins = [
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'http://localhost:5000',
+  'http://127.0.0.1:5173',
+  'http://127.0.0.1:5174',
+  'http://127.0.0.1:5000',
+  'https://blood.loganathanm.in',
+];
+const envOrigins = (process.env.CLIENT_URL || '').split(',').map(s => s.trim()).filter(Boolean);
+const allowedOrigins = Array.from(new Set([...defaultOrigins, ...envOrigins]));
+
 const corsOptions = {
   origin: (origin, cb) => {
-    if (!origin || allowedOrigins.includes(origin) || process.env.VERCEL || (typeof origin === 'string' && origin.includes('blood.loganathanm.in')) || (typeof origin === 'string' && origin.endsWith('.vercel.app'))) {
+    if (
+      !origin ||
+      allowedOrigins.includes(origin) ||
+      process.env.VERCEL ||
+      (typeof origin === 'string' && origin.includes('blood.loganathanm.in')) ||
+      (typeof origin === 'string' && origin.endsWith('.vercel.app'))
+    ) {
       return cb(null, true);
     }
     cb(new Error(`CORS: ${origin} not allowed`));

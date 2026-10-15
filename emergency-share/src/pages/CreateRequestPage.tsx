@@ -21,7 +21,7 @@ import {
   ChevronLeft,
 } from 'lucide-react'
 import { createRequestSchema, type CreateRequestFormData } from '../lib/schema'
-import { createRequestMock } from '../lib/mockStore'
+import { createEmergencyRequest } from '../lib/api'
 import type { BloodGroup, BloodComponent, Urgency } from '../types'
 
 // ── Constants ─────────────────────────────────────────────
@@ -97,7 +97,7 @@ export default function CreateRequestPage() {
 
   const onSubmit = async (data: CreateRequestFormData) => {
     try {
-      const { id } = await createRequestMock({
+      const { id } = await createEmergencyRequest({
         ...data,
         contactPhone: data.contactPhone.replace(/\D/g, '').replace(/^91/, ''),
       })
