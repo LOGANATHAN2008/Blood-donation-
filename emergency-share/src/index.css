@@ -1,0 +1,153 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Base Tokens ─────────────────────────────────────── */
+:root {
+  --color-accent: #D32F2F;
+  --color-accent-light: #EF5350;
+  --color-accent-dark: #B71C1C;
+  --color-bg: #FFFFFF;
+  --color-surface: #F8F8F8;
+  --color-surface-2: #F0F0F0;
+  --color-text: #111111;
+  --color-text-muted: #555555;
+  --color-border: #E0E0E0;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+  --radius-2xl: 2rem;
+}
+
+.dark {
+  --color-bg: #0D0D0D;
+  --color-surface: #1A1A1A;
+  --color-surface-2: #252525;
+  --color-text: #F5F5F5;
+  --color-text-muted: #A0A0A0;
+  --color-border: #333333;
+}
+
+/* ── Base styles ─────────────────────────────────────── */
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: 'Noto Sans', 'Noto Sans Tamil', 'Noto Sans Kannada', 'Noto Sans Devanagari', system-ui, sans-serif;
+  min-height: 100dvh;
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Design tokens as Tailwind utilities ─────────────── */
+@layer utilities {
+  .bg-app     { background: var(--color-bg); }
+  .bg-surface { background: var(--color-surface); }
+  .bg-surface-2 { background: var(--color-surface-2); }
+  .text-base-clr { color: var(--color-text); }
+  .text-muted { color: var(--color-text-muted); }
+  .border-base { border-color: var(--color-border); }
+
+  /* ── Blood group chip ─── */
+  .chip {
+    @apply inline-flex items-center justify-center px-4 py-2 rounded-full font-semibold text-sm
+           border-2 cursor-pointer select-none transition-all duration-200 active:scale-95;
+    border-color: var(--color-border);
+    color: var(--color-text-muted);
+    background: var(--color-surface);
+  }
+  .chip.selected {
+    border-color: var(--color-accent);
+    background: var(--color-accent);
+    color: white;
+    box-shadow: 0 0 0 3px rgba(211,47,47,.25);
+  }
+  .chip:not(.selected):hover {
+    border-color: var(--color-accent-light);
+    color: var(--color-accent);
+  }
+
+  /* ── Primary Button ─── */
+  .btn-primary {
+    @apply w-full flex items-center justify-center gap-2 py-4 rounded-2xl font-bold text-lg
+           text-white transition-all duration-200 active:scale-95 select-none;
+    background: linear-gradient(135deg, var(--color-accent-light) 0%, var(--color-accent) 50%, var(--color-accent-dark) 100%);
+    box-shadow: 0 4px 20px rgba(211,47,47,.4);
+  }
+  .btn-primary:hover { filter: brightness(1.08); }
+  .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
+
+  /* ── Secondary Button ─── */
+  .btn-secondary {
+    @apply w-full flex items-center justify-center gap-2 py-4 rounded-2xl font-semibold text-base
+           transition-all duration-200 active:scale-95 select-none;
+    background: var(--color-surface-2);
+    color: var(--color-text);
+    border: 2px solid var(--color-border);
+  }
+  .btn-secondary:hover { border-color: var(--color-accent); color: var(--color-accent); }
+
+  /* ── Input ─── */
+  .input-field {
+    @apply w-full px-4 py-3 rounded-xl border-2 text-base outline-none
+           transition-all duration-200 appearance-none;
+    background: var(--color-surface);
+    border-color: var(--color-border);
+    color: var(--color-text);
+  }
+  .input-field::placeholder { color: var(--color-text-muted); }
+  .input-field:focus {
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 3px rgba(211,47,47,.15);
+  }
+  .input-field.error { border-color: #D32F2F; }
+
+  /* ── Card container ─── */
+  .card {
+    @apply rounded-2xl p-5;
+    background: var(--color-surface);
+    border: 1.5px solid var(--color-border);
+  }
+
+  /* ── Section label ─── */
+  .label {
+    @apply block text-xs font-bold tracking-widest uppercase mb-2;
+    color: var(--color-text-muted);
+  }
+
+  /* ── Error text ─── */
+  .error-text { @apply text-xs mt-1; color: #D32F2F; }
+
+  /* ── Stepper ─── */
+  .stepper-btn {
+    @apply w-11 h-11 rounded-full flex items-center justify-center font-bold text-xl
+           transition-all duration-150 active:scale-90 select-none;
+    background: var(--color-surface-2);
+    color: var(--color-text);
+    border: 2px solid var(--color-border);
+  }
+  .stepper-btn:hover { border-color: var(--color-accent); color: var(--color-accent); }
+}
+
+/* ── Scrollbar ─────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 99px; }
+
+/* ── No spinner on number input ─────────────────────── */
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+input[type=number] { -moz-appearance: textfield; }
