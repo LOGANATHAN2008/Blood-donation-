@@ -19,9 +19,11 @@ const subSchema = z.object({
   }).optional()
 });
 
+const DEFAULT_VAPID_PUBLIC_KEY = 'BKKXKxYRtEEy0gq3ZGa6xpbxA21QMKDYooi8vREkLMCP08lWweU3Y6XD0DMKHayYC9JytRbS_0YDGVoxaMVSxHc';
+
 async function getPublicKey(req, res) {
   res.json({
-    publicKey: process.env.VAPID_PUBLIC_KEY || ''
+    publicKey: process.env.VAPID_PUBLIC_KEY || DEFAULT_VAPID_PUBLIC_KEY
   });
 }
 

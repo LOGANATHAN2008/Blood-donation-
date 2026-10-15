@@ -6,16 +6,36 @@ const api = axios.create({
   timeout: 30000,
 });
 
-// Attach Firebase ID token to every request
+// Attach Firebase or local ID token to every request
 api.interceptors.request.use(async (config) => {
   const mockEmail = localStorage.getItem('mock_email');
+  const mockPhone = localStorage.getItem('mock_phone');
+  let mockToken = null;
+  
   if (mockEmail) {
-    config.headers.Authorization = `Bearer mock-token-${mockEmail}`;
+    mockToken = `mock-token-${mockEmail}`;
+  } else if (mockPhone) {
+    mockToken = `mock-token-${mockPhone}`;
   } else {
-    const user = auth.currentUser;
+    const rawUser = localStorage.getItem('mock_user');
+    if (rawUser) {
+      try {
+        const u = JSON.parse(rawUser);
+        const ident = u.email || u.phoneNumber || u.phone || u.uid || 'user';
+        mockToken = `mock-token-${ident}`;
+      } catch {}
+    }
+  }
+
+  if (mockToken) {
+    config.headers.Authorization = `Bearer ${mockToken}`;
+  } else {
+    const user = auth?.currentUser;
     if (user) {
-      const token = await user.getIdToken();
-      config.headers.Authorization = `Bearer ${token}`;
+      try {
+        const token = await user.getIdToken();
+        config.headers.Authorization = `Bearer ${token}`;
+      } catch {}
     }
   }
   return config;

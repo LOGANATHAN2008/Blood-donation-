@@ -2,9 +2,12 @@ import { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
 import { useLang } from '../../context/LangContext';
-import { INDIA_DISTRICTS } from '../../config/districts';
+import { INDIA_STATES } from '../../lib/indiaStates';
+import indiaDistrictsData from '../../lib/indiaDistricts.json';
+import api from '../../lib/api';
 
 const ALL_BLOOD_GROUPS = ['A+','A-','B+','B-','O+','O-','AB+','AB-'];
+const DEFAULT_VAPID_PUBLIC_KEY = 'BKKXKxYRtEEy0gq3ZGa6xpbxA21QMKDYooi8vREkLMCP08lWweU3Y6XD0DMKHayYC9JytRbS_0YDGVoxaMVSxHc';
 
 function urlBase64ToUint8Array(base64String) {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
@@ -18,8 +21,15 @@ function urlBase64ToUint8Array(base64String) {
 }
 
 export default function AlertSubscribeCard({ compact = false }) {
-  const { user, token } = useAuth();
+  const { user, dbUser, idToken, token: ctxToken } = useAuth();
   const { t } = useLang();
+
+  // If user is logged in, resolve active user token
+  const isLoggedIn = Boolean(
+    user || 
+    localStorage.getItem('mock_user') || 
+    localStorage.getItem('mock_email')
+  );
 
   const [selectedGroups, setSelectedGroups] = useState(['O+']);
   const [selectedState, setSelectedState] = useState('Tamil Nadu');
@@ -33,9 +43,15 @@ export default function AlertSubscribeCard({ compact = false }) {
   );
 
   useEffect(() => {
-    if (user?.state) setSelectedState(user.state);
-    if (user?.district) setSelectedDistrict(user.district);
-  }, [user]);
+    if (user?.state || dbUser?.state) setSelectedState(user?.state || dbUser?.state);
+    if (user?.district || dbUser?.district) setSelectedDistrict(user?.district || dbUser?.district);
+    if (user?.bloodGroup || dbUser?.bloodGroup) {
+      const bg = user?.bloodGroup || dbUser?.bloodGroup;
+      if (ALL_BLOOD_GROUPS.includes(bg)) {
+        setSelectedGroups([bg]);
+      }
+    }
+  }, [user, dbUser]);
 
   // Check if current browser is subscribed
   useEffect(() => {
@@ -44,7 +60,7 @@ export default function AlertSubscribeCard({ compact = false }) {
       reg.pushManager.getSubscription().then((sub) => {
         setIsSubscribed(!!sub);
       });
-    });
+    }).catch(() => {});
   }, []);
 
   const toggleGroup = (bg) => {
@@ -60,7 +76,7 @@ export default function AlertSubscribeCard({ compact = false }) {
   };
 
   const handleSubscribe = async () => {
-    if (!token) {
+    if (!isLoggedIn) {
       toast.error('Please sign in to subscribe to blood alerts.');
       return;
     }
@@ -80,11 +96,14 @@ export default function AlertSubscribeCard({ compact = false }) {
       }
 
       // 1. Get VAPID public key
-      const keyRes = await fetch('/api/push/public-key');
-      const { publicKey } = await keyRes.json();
-      if (!publicKey) {
-        toast.error('Push alerts are currently configuring on the server.');
-        return;
+      let publicKey = DEFAULT_VAPID_PUBLIC_KEY;
+      try {
+        const keyRes = await api.get('/push/public-key');
+        if (keyRes.data?.publicKey) {
+          publicKey = keyRes.data.publicKey;
+        }
+      } catch (e) {
+        console.warn('Using default VAPID key fallback:', e.message);
       }
 
       // 2. Register service worker push subscription
@@ -97,27 +116,20 @@ export default function AlertSubscribeCard({ compact = false }) {
         });
       }
 
-      // 3. Save subscription to backend
-      const res = await fetch('/api/push/subscribe', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
+      // 3. Save subscription to backend using authenticated api client
+      const res = await api.post('/push/subscribe', {
+        endpoint: sub.endpoint,
+        keys: {
+          p256dh: btoa(String.fromCharCode.apply(null, new Uint8Array(sub.getKey('p256dh')))),
+          auth: btoa(String.fromCharCode.apply(null, new Uint8Array(sub.getKey('auth'))))
         },
-        body: JSON.stringify({
-          endpoint: sub.endpoint,
-          keys: {
-            p256dh: btoa(String.fromCharCode.apply(null, new Uint8Array(sub.getKey('p256dh')))),
-            auth: btoa(String.fromCharCode.apply(null, new Uint8Array(sub.getKey('auth'))))
-          },
-          bloodGroups: selectedGroups,
-          state: selectedState,
-          district: selectedDistrict,
-          urgencyFilter
-        })
+        bloodGroups: selectedGroups,
+        state: selectedState,
+        district: selectedDistrict,
+        urgencyFilter
       });
 
-      if (res.ok) {
+      if (res.data?.success) {
         setIsSubscribed(true);
         toast.success('Subscribed! You will get alerts when blood is urgently needed nearby.');
       } else {
@@ -125,7 +137,7 @@ export default function AlertSubscribeCard({ compact = false }) {
       }
     } catch (err) {
       console.error('Subscription error:', err);
-      toast.error('Subscription failed. ' + err.message);
+      toast.error('Subscription failed: ' + (err.response?.data?.error || err.message));
     } finally {
       setLoading(false);
     }
@@ -138,14 +150,9 @@ export default function AlertSubscribeCard({ compact = false }) {
       const sub = await reg.pushManager.getSubscription();
       if (sub) {
         await sub.unsubscribe();
-        await fetch('/api/push/unsubscribe', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`
-          },
-          body: JSON.stringify({ endpoint: sub.endpoint })
-        });
+        try {
+          await api.post('/push/unsubscribe', { endpoint: sub.endpoint });
+        } catch {}
       }
       setIsSubscribed(false);
       toast.success('Unsubscribed from device push alerts.');
@@ -160,24 +167,20 @@ export default function AlertSubscribeCard({ compact = false }) {
   const handleSendTest = async () => {
     try {
       setTesting(true);
-      const res = await fetch('/api/push/test', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (res.ok) {
+      const res = await api.post('/push/test');
+      if (res.data?.success) {
         toast.success('Test alert dispatched! Check your notification tray.');
       } else {
-        const err = await res.json();
-        toast.error(err.error || 'Failed to dispatch test notification.');
+        toast.error(res.data?.error || 'Failed to dispatch test notification.');
       }
-    } catch {
-      toast.error('Network error.');
+    } catch (err) {
+      toast.error(err.response?.data?.error || err.message || 'Network error.');
     } finally {
       setTesting(false);
     }
   };
 
-  const stateDistricts = selectedState && INDIA_DISTRICTS ? (INDIA_DISTRICTS[selectedState] || []) : [];
+  const availableDistricts = selectedState && indiaDistrictsData[selectedState] ? indiaDistrictsData[selectedState] : [];
 
   return (
     <div className="p-5 md:p-6 rounded-3xl bg-gradient-to-br from-rose-500/10 via-red-500/5 to-transparent border border-rose-500/25 shadow-md">
@@ -248,10 +251,9 @@ export default function AlertSubscribeCard({ compact = false }) {
             }}
             className="w-full p-2.5 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
           >
-            <option value="Tamil Nadu">Tamil Nadu</option>
-            <option value="Karnataka">Karnataka</option>
-            <option value="Kerala">Kerala</option>
-            <option value="Andhra Pradesh">Andhra Pradesh</option>
+            {INDIA_STATES.map((s) => (
+              <option key={s} value={s}>{s}</option>
+            ))}
           </select>
         </div>
 
@@ -263,7 +265,10 @@ export default function AlertSubscribeCard({ compact = false }) {
             className="w-full p-2.5 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
           >
             <option value="">All Districts</option>
-            {stateDistricts.map((d) => (
+            {selectedDistrict && !availableDistricts.includes(selectedDistrict) && (
+              <option value={selectedDistrict}>{selectedDistrict}</option>
+            )}
+            {availableDistricts.map((d) => (
               <option key={d} value={d}>
                 {d}
               </option>
@@ -291,7 +296,7 @@ export default function AlertSubscribeCard({ compact = false }) {
           <button
             onClick={handleSubscribe}
             disabled={loading}
-            className="flex-1 min-w-[170px] py-3 px-5 rounded-2xl bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white font-bold text-xs shadow-lg shadow-rose-600/30 transition active:scale-95 disabled:opacity-50"
+            className="flex-1 min-w-[170px] py-3 px-5 rounded-2xl bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white font-bold text-xs shadow-lg shadow-rose-600/30 transition active:scale-95 disabled:opacity-50 cursor-pointer"
           >
             {loading ? 'Subscribing...' : '🔔 Enable Web Push Alerts'}
           </button>
@@ -300,14 +305,14 @@ export default function AlertSubscribeCard({ compact = false }) {
             <button
               onClick={handleSendTest}
               disabled={testing}
-              className="py-2.5 px-4 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200 font-bold text-xs hover:bg-gray-50 transition"
+              className="py-2.5 px-4 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200 font-bold text-xs hover:bg-gray-50 transition cursor-pointer"
             >
               {testing ? 'Sending...' : `🚀 ${t('sendTestAlert')}`}
             </button>
             <button
               onClick={handleUnsubscribe}
               disabled={loading}
-              className="py-2.5 px-4 rounded-xl text-red-600 dark:text-red-400 font-semibold text-xs hover:bg-red-50 dark:hover:bg-red-950/30 transition"
+              className="py-2.5 px-4 rounded-xl text-red-600 dark:text-red-400 font-semibold text-xs hover:bg-red-50 dark:hover:bg-red-950/30 transition cursor-pointer"
             >
               Unsubscribe Device
             </button>

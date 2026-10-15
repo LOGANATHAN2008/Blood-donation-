@@ -4,16 +4,14 @@ const Donor = require('../models/Donor');
 const { canDonate, isDonorEligible } = require('../utils/bloodCompat');
 
 // Initialize VAPID
-if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
-  try {
-    webPush.setVapidDetails(
-      process.env.VAPID_SUBJECT || 'mailto:admin@Blood.loganathanm.in',
-      process.env.VAPID_PUBLIC_KEY,
-      process.env.VAPID_PRIVATE_KEY
-    );
-  } catch (err) {
-    console.error('Failed to configure Web Push VAPID:', err.message);
-  }
+const VAPID_PUB = process.env.VAPID_PUBLIC_KEY || 'BKKXKxYRtEEy0gq3ZGa6xpbxA21QMKDYooi8vREkLMCP08lWweU3Y6XD0DMKHayYC9JytRbS_0YDGVoxaMVSxHc';
+const VAPID_PRIV = process.env.VAPID_PRIVATE_KEY || 'cA8BHIf92GcLiS8xyHRTL3eg1cNTNxbO-I93797PecE';
+const VAPID_SUB = process.env.VAPID_SUBJECT || 'mailto:admin@Blood.loganathanm.in';
+
+try {
+  webPush.setVapidDetails(VAPID_SUB, VAPID_PUB, VAPID_PRIV);
+} catch (err) {
+  console.error('Failed to configure Web Push VAPID:', err.message);
 }
 
 /**
