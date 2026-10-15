@@ -1,211 +1,196 @@
 import { useRef, useMemo, useState } from 'react';
 import { useFrame, useThree, Canvas } from '@react-three/fiber';
-import { MeshTransmissionMaterial, Environment, Lightformer, Html, PerformanceMonitor } from '@react-three/drei';
+import { Html, Float } from '@react-three/drei';
 import * as THREE from 'three';
 
-// Procedural drop geometry using LatheGeometry
-const DropGeometry = () => {
+// Procedurally modeled liquid teardrop
+function useDropGeometry() {
   return useMemo(() => {
     const points = [];
-    for (let i = 0; i <= 64; i++) {
-      const t = i / 64; // 0 to 1
-      const x = Math.sin(Math.PI * t) * Math.pow(1 - t, 0.6) * 1.5;
-      const y = (t - 0.5) * 4;
-      points.push(new THREE.Vector2(x, y));
+    const segments = 48;
+    for (let i = 0; i <= segments; i++) {
+      const t = i / segments; // 0 (bottom) to 1 (top tip)
+      // Teardrop profile equation
+      const radius = Math.sin(Math.PI * t) * Math.pow(1 - t, 0.42) * 1.55;
+      const height = (t - 0.45) * 3.6;
+      points.push(new THREE.Vector2(Math.max(0.001, radius), height));
     }
     const geo = new THREE.LatheGeometry(points, 64);
-    geo.scale(1, 1, 0.85); // Squash slightly on Z for a natural look
-    geo.translate(0, 0.2, 0); // Lift up to center it better
     geo.computeVertexNormals();
     return geo;
   }, []);
-};
+}
 
-function BloodCells() {
-  const meshRefs = useRef([]);
-  const count = 5;
+// Biconcave Red Blood Cell (Erythrocyte) Geometry
+function useCellGeometry() {
+  return useMemo(() => {
+    const points = [];
+    const segments = 24;
+    for (let i = 0; i <= segments; i++) {
+      const t = i / segments; // 0 to 1
+      const rad = t * 0.45;
+      // Biconcave indentation formula
+      const thickness = 0.22 * (0.8 + 1.2 * t * t - 1.1 * t * t * t * t);
+      points.push(new THREE.Vector2(rad, thickness));
+    }
+    const geo = new THREE.LatheGeometry(points, 32);
+    geo.computeVertexNormals();
+    return geo;
+  }, []);
+}
+
+// Micro floating blood cells
+function FloatingCells({ cellGeo }) {
+  const groupRef = useRef();
   
-  const positions = useMemo(() => {
-    return Array.from({ length: count }, () => [
-      (Math.random() - 0.5) * 10,
-      (Math.random() - 0.5) * 10,
-      -3 - Math.random() * 3
-    ]);
+  const cells = useMemo(() => {
+    return Array.from({ length: 8 }, (_, i) => ({
+      pos: [
+        (Math.sin(i * 1.3) * 2.2) + (i % 2 === 0 ? 0.3 : -0.3),
+        (Math.cos(i * 0.9) * 2.0) - 0.2,
+        (Math.sin(i * 2.1) * 1.2) - 0.5,
+      ],
+      rotSpeed: [(Math.random() - 0.5) * 1.2, (Math.random() - 0.5) * 1.5, (Math.random() - 0.5) * 0.8],
+      scale: 0.55 + Math.random() * 0.35,
+      phase: i * 0.8,
+    }));
   }, []);
 
-  useFrame((state, delta) => {
+  useFrame((state) => {
     const t = state.clock.getElapsedTime();
-    meshRefs.current.forEach((mesh, i) => {
-      if (!mesh) return;
-      mesh.position.y += Math.sin(t * 0.5 + i) * 0.005;
-      mesh.rotation.x += delta * 0.2;
-      mesh.rotation.y += delta * 0.3;
-      mesh.position.x += Math.cos(t * 0.2 + i) * 0.005;
+    if (!groupRef.current) return;
+    groupRef.current.children.forEach((child, i) => {
+      const data = cells[i];
+      if (!data) return;
+      child.rotation.x += data.rotSpeed[0] * 0.015;
+      child.rotation.y += data.rotSpeed[1] * 0.015;
+      child.position.y = data.pos[1] + Math.sin(t * 1.5 + data.phase) * 0.18;
     });
   });
 
   return (
-    <>
-      {positions.map((pos, i) => (
-        <mesh 
-          key={i} 
-          position={pos} 
-          ref={el => meshRefs.current[i] = el}
-          rotation={[Math.random() * Math.PI, Math.random() * Math.PI, 0]}
-          scale={[1, 1, 0.5]}
-        >
-          <torusGeometry args={[0.3, 0.12, 16, 32]} />
-          <meshStandardMaterial color="#B3122B" roughness={0.3} />
+    <group ref={groupRef}>
+      {cells.map((c, i) => (
+        <mesh key={i} position={c.pos} geometry={cellGeo} scale={c.scale}>
+          <meshPhysicalMaterial 
+            color="#E11D48"
+            emissive="#9F1239"
+            emissiveIntensity={0.5}
+            roughness={0.15}
+            metalness={0.1}
+            clearcoat={1}
+            clearcoatRoughness={0.1}
+          />
         </mesh>
       ))}
-    </>
+    </group>
   );
 }
 
 function BloodDropScene({ activeGroup, onClick }) {
-  const meshRef = useRef();
-  const innerRef = useRef();
-  const [dpr, setDpr] = useState(1.5);
+  const outerDropRef = useRef();
+  const innerCoreRef = useRef();
   const { pointer } = useThree();
-  const [hasEntered, setHasEntered] = useState(false);
-  const [ripple, setRipple] = useState(0); // time of last click
-  const rippleRef = useRef();
+  const [pulseClick, setPulseClick] = useState(0);
 
-  const geometry = DropGeometry();
+  const dropGeo = useDropGeometry();
+  const cellGeo = useCellGeometry();
 
   const handlePointerDown = (e) => {
     e.stopPropagation();
-    setRipple(state => state === 0 ? 0.01 : 0); // trigger reset
-    setTimeout(() => setRipple(Date.now()), 10);
+    setPulseClick(Date.now());
     onClick?.();
   };
 
   useFrame((state, delta) => {
-    if (!meshRef.current) return;
-    const time = state.clock.getElapsedTime();
-    
-    let bounceY = 0;
-    let scaleY = 1;
-    let scaleXZ = 1;
+    const t = state.clock.getElapsedTime();
+    if (!outerDropRef.current) return;
 
-    // Entry animation (0 to 1.5 seconds)
-    if (time < 1.5) {
-      // Simple elastic drop
-      const t = Math.min(time / 1.5, 1);
-      const ease = 1 - Math.pow(1 - t, 3); // easeOutCubic
-      bounceY = (1 - ease) * 5; // Starts 5 units high
-      
-      // Squash and stretch
-      if (t < 0.5) {
-        scaleY = 1 + (1 - t*2) * 0.5; // Stretches as it falls
-        scaleXZ = 1 - (1 - t*2) * 0.2;
-      } else {
-        const bounce = Math.sin((t - 0.5) * Math.PI * 4) * Math.exp(-(t - 0.5) * 5);
-        scaleY = 1 - bounce * 0.3; // Squash on impact
-        scaleXZ = 1 + bounce * 0.3;
-      }
-    } else if (!hasEntered) {
-      setHasEntered(true);
-    }
+    // Organic floating + mouse tracking
+    const targetRotX = pointer.y * 0.35;
+    const targetRotY = pointer.x * 0.45 + Math.sin(t * 0.6) * 0.2;
 
-    // Ripple logic
-    if (ripple > 0 && rippleRef.current) {
-      const rTime = (Date.now() - ripple) / 1000;
-      if (rTime < 1) {
-        const rippleScale = 1 + rTime * 5;
-        const rippleOpacity = 1 - rTime;
-        rippleRef.current.scale.setScalar(rippleScale);
-        rippleRef.current.material.opacity = rippleOpacity;
+    outerDropRef.current.rotation.x = THREE.MathUtils.damp(outerDropRef.current.rotation.x, targetRotX, 4, delta);
+    outerDropRef.current.rotation.y = THREE.MathUtils.damp(outerDropRef.current.rotation.y, targetRotY, 4, delta);
+
+    // Heartbeat pulsation effect
+    const heartBeat = Math.pow(Math.max(0, Math.sin(t * 3.5)), 16) * 0.07;
+
+    // Click elastic squeeze
+    let clickEffect = 0;
+    if (pulseClick > 0) {
+      const elapsed = (Date.now() - pulseClick) / 1000;
+      if (elapsed < 0.6) {
+        clickEffect = Math.sin(elapsed * Math.PI * 4) * Math.exp(-elapsed * 6) * 0.25;
       }
     }
-    
-    // Heartbeat pulse every 1.2s (sync with ECG if possible)
-    const pulse = Math.pow(Math.sin(time * Math.PI * 2 / 1.2), 32);
-    const pulseScale = 1 + pulse * 0.04;
-    
-    meshRef.current.scale.set(scaleXZ * pulseScale, scaleY * pulseScale, scaleXZ * pulseScale);
-    meshRef.current.position.y = bounceY;
-    
-    // Tilt toward pointer with smooth damping
-    const targetRotationX = pointer.y * 0.5;
-    const targetRotationY = pointer.x * 0.5;
-    
-    meshRef.current.rotation.x = THREE.MathUtils.damp(meshRef.current.rotation.x, targetRotationX, 4, delta);
-    meshRef.current.rotation.y = THREE.MathUtils.damp(meshRef.current.rotation.y, targetRotationY, 4, delta);
-    
-    // Inner liquid slosh logic
-    if (innerRef.current) {
-      innerRef.current.rotation.x = THREE.MathUtils.damp(innerRef.current.rotation.x, targetRotationX * 1.2, 3, delta);
-      innerRef.current.rotation.y = THREE.MathUtils.damp(innerRef.current.rotation.y, targetRotationY * 1.2, 3, delta);
-      
-      // Slight vertical breathing and subtle liquid sine wave
-      innerRef.current.position.y = Math.sin(time * 2) * 0.1 - 0.2; 
+
+    const currentScale = 1 + heartBeat + clickEffect;
+    outerDropRef.current.scale.set(currentScale * 1.05, currentScale * 0.98, currentScale * 1.05);
+
+    // Inner glowing core gentle breathing
+    if (innerCoreRef.current) {
+      const coreScale = 0.82 + Math.sin(t * 2.5) * 0.04 + heartBeat * 0.8;
+      innerCoreRef.current.scale.set(coreScale, coreScale, coreScale);
+      innerCoreRef.current.rotation.y -= delta * 0.4;
     }
   });
 
   return (
     <>
-      <PerformanceMonitor onDecline={() => setDpr(1)} onIncline={() => setDpr(1.5)} />
-      
-      <group onPointerDown={handlePointerDown} className="cursor-pointer">
-        {/* Main Glass Drop */}
-        <mesh ref={meshRef} geometry={geometry}>
-          <MeshTransmissionMaterial 
-            color="#A3122B"
-            thickness={2.5}
-            roughness={0.05}
-            transmission={0.9}
-            ior={1.3}
-            chromaticAberration={0.03}
-            clearcoat={1}
-            resolution={dpr > 1 ? 512 : 256} // Lower res for perf on decline
-            samples={dpr > 1 ? 6 : 4}
-          />
+      {/* Dynamic Lighting for Translucent Ruby Shimmer */}
+      <ambientLight intensity={1.2} color="#FFF1F2" />
+      <directionalLight position={[4, 8, 6]} intensity={3.0} color="#FFFFFF" />
+      <pointLight position={[-4, -2, 3]} intensity={4.5} color="#FF0055" />
+      <pointLight position={[3, -4, -3]} intensity={3.5} color="#E11D48" />
+      <pointLight position={[0, 5, -4]} intensity={2.5} color="#FF4D6D" />
+
+      {/* Main Interactive Floating Drop */}
+      <Float speed={2.5} rotationIntensity={0.2} floatIntensity={0.4}>
+        <group onPointerDown={handlePointerDown} className="cursor-pointer">
           
-          {/* Centered Html Text Pill */}
-          <Html position={[0, 0, 1.2]} center className="pointer-events-none">
-            <div className="bg-white/90 backdrop-blur dark:bg-brand-900/90 text-brand-700 dark:text-brand-300 px-4 py-1.5 rounded-full font-black shadow-lg text-lg border border-brand-100 dark:border-brand-800 transition-colors">
-              {activeGroup}
-            </div>
-          </Html>
-        </mesh>
-        
-        {/* Inner Dark Liquid */}
-        <mesh ref={innerRef} geometry={geometry} scale={0.92}>
-          <meshPhysicalMaterial 
-            color="#3B0610"
-            metalness={0.1}
-            roughness={0.4}
-            transmission={0}
-          />
-        </mesh>
-      </group>
+          {/* Outer Glossy Ruby Blood Shell */}
+          <mesh ref={outerDropRef} geometry={dropGeo}>
+            <meshPhysicalMaterial 
+              color="#E11D48"
+              emissive="#880825"
+              emissiveIntensity={0.35}
+              roughness={0.06}
+              metalness={0.12}
+              transmission={0.5}
+              ior={1.42}
+              thickness={1.8}
+              clearcoat={1.0}
+              clearcoatRoughness={0.05}
+              reflectivity={0.9}
+            />
 
-      {/* Studio Lighting using Lightformers */}
-      <Environment resolution={256}>
-        <group rotation={[-Math.PI / 4, -0.3, 0]}>
-          <Lightformer intensity={4} rotation-x={Math.PI / 2} position={[0, 5, -9]} scale={[10, 10, 1]} />
-          <Lightformer intensity={2} rotation-y={Math.PI / 2} position={[-5, 1, -1]} scale={[10, 2, 1]} />
-          <Lightformer intensity={2} rotation-y={-Math.PI / 2} position={[10, 1, 0]} scale={[20, 2, 1]} />
-          <Lightformer type="ring" intensity={2} rotation-y={Math.PI / 2} position={[-0.1, -1, -5]} scale={10} />
+            {/* Glowing Interactive Blood Group Pill */}
+            <Html position={[0, -0.15, 1.35]} center className="pointer-events-none select-none">
+              <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/95 dark:bg-gray-900/95 shadow-2xl border-2 border-brand-500/80 backdrop-blur-md transform transition-all duration-300 hover:scale-110">
+                <span className="w-2.5 h-2.5 rounded-full bg-brand-500 animate-pulse shadow-sm shadow-brand-500" />
+                <span className="text-brand-600 dark:text-brand-400 font-black text-base sm:text-lg tracking-wider">
+                  {activeGroup}
+                </span>
+              </div>
+            </Html>
+          </mesh>
+
+          {/* Inner Glowing Core (Radiant Heartbeat) */}
+          <mesh ref={innerCoreRef} geometry={dropGeo} scale={0.82}>
+            <meshStandardMaterial 
+              color="#FF0040"
+              emissive="#FF1744"
+              emissiveIntensity={1.2}
+              roughness={0.25}
+            />
+          </mesh>
+
         </group>
-      </Environment>
-      
-      {/* Soft volumetric glow behind the drop */}
-      <mesh position={[0, 0, -2]}>
-        <planeGeometry args={[15, 15]} />
-        <meshBasicMaterial color="#7A0C1F" transparent opacity={0.15} depthWrite={false} blending={THREE.AdditiveBlending} />
-      </mesh>
-      
-      {/* Click Ripple */}
-      {ripple > 0 && (
-        <mesh position={[0, 0, -1]} ref={rippleRef}>
-          <ringGeometry args={[1.5, 1.8, 32]} />
-          <meshBasicMaterial color="#ff4d64" transparent opacity={0} blending={THREE.AdditiveBlending} depthWrite={false} />
-        </mesh>
-      )}
+      </Float>
 
-      <BloodCells />
+      {/* Floating Micro Red Blood Cells */}
+      <FloatingCells cellGeo={cellGeo} />
     </>
   );
 }
@@ -214,11 +199,11 @@ export default function BloodDrop3D({ inView = true, ...props }) {
   return (
     <Canvas 
       frameloop={inView ? 'always' : 'demand'}
-      camera={{ position: [0, 0, 8], fov: 45 }}
-      gl={{ alpha: true, antialias: true, powerPreference: "high-performance" }}
+      camera={{ position: [0, 0, 7.2], fov: 42 }}
+      gl={{ alpha: true, antialias: true, powerPreference: 'high-performance' }}
       dpr={[1, 1.5]}
-      className="pointer-events-none"
-      style={{ pointerEvents: 'auto' }} // Allow clicks on the canvas
+      className="w-full h-full"
+      style={{ pointerEvents: 'auto' }}
     >
       <BloodDropScene {...props} />
     </Canvas>
