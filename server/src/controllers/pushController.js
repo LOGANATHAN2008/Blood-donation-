@@ -73,18 +73,26 @@ async function getSubscription(req, res, next) {
 
 async function sendTestNotification(req, res, next) {
   try {
-    const subs = await PushSubscription.find({ uid: req.user.uid });
+    const { endpoint } = req.body || {};
+    const query = endpoint
+      ? { $or: [{ endpoint }, { uid: req.user.uid }] }
+      : { uid: req.user.uid };
+
+    const subs = await PushSubscription.find(query);
     if (!subs.length) {
-      return res.status(400).json({ error: 'No active device subscription found for your account.' });
+      return res.status(400).json({ error: 'No active device subscription found for your account. Please click Enable Web Push Alerts first.' });
     }
 
     const testPayload = {
       title: '🩸 Test Alert - Life Connect',
       body: 'Web Push alerts are configured and working properly on your device!',
-      icon: '/icons/icon-192x192.png',
-      badge: '/icons/icon-192x192.png',
+      icon: '/brand/pwa-192x192.png',
+      badge: '/brand/pwa-192x192.png',
+      vibrate: [200, 100, 200],
+      tag: 'lifeconnect-test-' + Date.now(),
+      renotify: true,
       data: {
-        url: '/settings',
+        url: '/requests',
         test: true
       }
     };

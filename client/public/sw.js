@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lifeconnect-v3';
+const CACHE_NAME = 'lifeconnect-v4';
 const OFFLINE_URL = '/offline.html';
 
 const ASSETS_TO_CACHE = [
@@ -81,6 +81,8 @@ self.addEventListener('push', (event) => {
     icon: data.icon || '/brand/pwa-192x192.png',
     badge: data.badge || '/brand/pwa-192x192.png',
     vibrate: [200, 100, 200],
+    tag: data.tag || 'lifeconnect-alert-' + Date.now(),
+    renotify: true,
     data: data.data || { url: '/requests' }
   };
 

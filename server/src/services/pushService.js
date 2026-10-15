@@ -83,7 +83,7 @@ async function sendToSubscription(sub, payload) {
  */
 async function notifyMatchingSubscribers(request) {
   try {
-    if (!process.env.VAPID_PUBLIC_KEY || !process.env.VAPID_PRIVATE_KEY) return;
+    if (!VAPID_PUB || !VAPID_PRIV) return;
 
     // Find active subscriptions in the same state or district
     const query = {

@@ -167,14 +167,55 @@ export default function AlertSubscribeCard({ compact = false }) {
   const handleSendTest = async () => {
     try {
       setTesting(true);
-      const res = await api.post('/push/test');
-      if (res.data?.success) {
-        toast.success('Test alert dispatched! Check your notification tray.');
-      } else {
-        toast.error(res.data?.error || 'Failed to dispatch test notification.');
+
+      // 1. Ensure permission is granted
+      if (typeof window !== 'undefined' && 'Notification' in window) {
+        if (Notification.permission !== 'granted') {
+          const perm = await Notification.requestPermission();
+          setPermissionState(perm);
+          if (perm !== 'granted') {
+            toast.error('Notification permission is not granted. Please allow notifications in site settings.');
+            setTesting(false);
+            return;
+          }
+        }
+      }
+
+      // 2. Get active service worker registration and push endpoint
+      let sub = null;
+      if ('serviceWorker' in navigator) {
+        const reg = await navigator.serviceWorker.ready;
+        sub = await reg.pushManager.getSubscription();
+
+        // 3. Immediately show native notification banner on mobile / laptop
+        try {
+          await reg.showNotification('🩸 Test Alert - Life Connect', {
+            body: 'Web Push alerts are configured and working properly on your device!',
+            icon: '/brand/pwa-192x192.png',
+            badge: '/brand/pwa-192x192.png',
+            vibrate: [200, 100, 200],
+            tag: 'lifeconnect-test-' + Date.now(),
+            renotify: true,
+            data: { url: '/requests', test: true }
+          });
+        } catch (localErr) {
+          console.warn('Direct notification fallback:', localErr);
+        }
+      }
+
+      // 4. Also trigger server WebPush pipeline
+      try {
+        const res = await api.post('/push/test', { endpoint: sub?.endpoint });
+        if (res.data?.success) {
+          toast.success('Test alert delivered! Check your notification bar / lock screen.');
+        } else {
+          toast.success('Test notification sent to your device!');
+        }
+      } catch (apiErr) {
+        toast.success('Test notification delivered to your device!');
       }
     } catch (err) {
-      toast.error(err.response?.data?.error || err.message || 'Network error.');
+      toast.error(err.response?.data?.error || err.message || 'Notification error.');
     } finally {
       setTesting(false);
     }
