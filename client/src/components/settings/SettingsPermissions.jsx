@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+ï»¿import { useState, useEffect } from "react";
 import { MapPin, Bell, CheckCircle2, XCircle, AlertCircle, ChevronRight, RefreshCw } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
@@ -74,7 +74,7 @@ function PermissionRow({ icon: Icon, iconColor, title, description, status, onRe
             disabled={loading}
             className="px-3 py-1.5 text-xs font-bold rounded-xl bg-brand-500 hover:bg-brand-600 text-white disabled:opacity-60 transition-colors whitespace-nowrap shadow-sm"
           >
-            {loading ? "Asking…" : "Allow"}
+            {loading ? "Askingâ€¦" : "Allow"}
           </button>
         ) : status === "granted" ? (
           <StatusIcon size={20} className={meta.color} />
@@ -206,7 +206,7 @@ export default function SettingsPermissions() {
               <span className="font-bold text-sm text-blue-700 dark:text-blue-400">Location</span>
             </div>
             <ul className="text-xs text-blue-600/80 dark:text-blue-400/80 space-y-1 list-disc list-inside">
-              <li>Find donors within 5–10 km</li>
+              <li>Find donors within 5â€“10 km</li>
               <li>Sort requests by distance</li>
               <li>Show nearby camps &amp; hospitals</li>
               <li>Auto-fill city/district on forms</li>
